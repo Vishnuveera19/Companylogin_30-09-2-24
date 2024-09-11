@@ -191,7 +191,7 @@ export default function Sidenav() {
               <ListItemText primary="Home" sx={{ opacity: open ? 1 : 0, color: "white" }} />
             </ListItemButton>
           </ListItem>
-  <ListItem disablePadding sx={{ display: "block" }}  onClick={() => navigate("/MastersTemplate")}>
+  {/* <ListItem disablePadding sx={{ display: "block" }}  onClick={() => navigate("/MastersTemplate")}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -216,7 +216,7 @@ export default function Sidenav() {
               </ListItemIcon>
               <ListItemText primary="Master" sx={{ opacity: open ? 1 : 0, color: "white" }} />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
 {/* 
           <ListItem disablePadding sx={{ display: "block" }} onClick={handleSalaryClick}>
             <ListItemButton
