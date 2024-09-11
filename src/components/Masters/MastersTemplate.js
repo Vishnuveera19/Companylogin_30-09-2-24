@@ -71,7 +71,7 @@ const MastersTemplate = () => {
             title: "Company",
             icon: <img src={PaymCompany} width={40} height={40} />,
             buttonLabel:"Add",
-            onClick: () => navigate("/CompanyForm01"),
+            onClick: () => navigate("/CompanyMasterss"),
           },
         {
             title: "Branch",
@@ -84,7 +84,7 @@ const MastersTemplate = () => {
             title: "Department",
             icon: <img src={PaymDep} width={40} height={40} />,
             buttonLabel:"Add",
-            onClick: () => navigate("/DepartmentMasters01"),
+            onClick: () => navigate("/DepartmentFormMaster"),
           },
           {
             title: "Designation",
@@ -108,7 +108,7 @@ const MastersTemplate = () => {
             title: "shift",
             icon: <img src={PaymDesig} width={40} height={40} />,
             buttonLabel:"Add",
-            onClick: () => navigate("/Paymshift0990"),
+            onClick: () => navigate("/ShiftFormMaster"),
           },
           {
             title: "category",
@@ -120,20 +120,20 @@ const MastersTemplate = () => {
             title: "job status",
             icon: <img src={PaymDesig} width={40} height={40} />,
             buttonLabel:"Add",
-            onClick: () => navigate("/JobStatusForm220"),
+            onClick: () => navigate("/JobStatusFormMaster"),
           },
           {
             title: "Level",
             icon: <img src={PaymDesig} width={40} height={40} />,
             buttonLabel:"Add",
-            onClick: () => navigate("/LevelForm33"),
+            onClick: () => navigate("/LevelFormMaster"),
           },
-          {
-            title: "Employee",
-            icon: <img src={PaymEmplo} width={40} height={40} />,
-            buttonLabel:"View",
-            onClick: () => navigate("/EmployeeHome220"),
-          },
+          // {
+          //   title: "Employee",
+          //   icon: <img src={PaymEmplo} width={40} height={40} />,
+          //   buttonLabel:"View",
+          //   onClick: () => navigate("/EmployeeHome220"),
+          // },
           {
             title: "Leave",
             icon: <img src={PaymEmplo} width={40} height={40} />,

@@ -17,8 +17,11 @@ import LoginForm from "./components/Authentication/Login";
 import { useState } from "react";
 import { useEffect } from "react";
 import { connect } from "react-redux";
+import { ThemeProvider } from '@mui/material/styles';
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import LoginOthers from "./components/Authentication/LoginOthers";
+import { LightThemeConfig } from "./components/Home Page/Theme";
+import { CssBaseline } from '@mui/material';
 function App(props) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [login, setLogin] = useState(false);
@@ -36,6 +39,7 @@ function App(props) {
   }
 
   return (
+  
     <div className="App">
       {console.log(props.state)}
       {/* <MainPage /> */}
@@ -48,6 +52,7 @@ function App(props) {
       </ErrorBoundary> 
       <Outlet />
     </div>
+  
   );
 }
 const mapStateToProps = (state) => ({ state: state });

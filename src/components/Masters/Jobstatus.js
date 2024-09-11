@@ -3,50 +3,61 @@ import { Grid, Card, TextField, Button, Typography, FormControl, MenuItem, Selec
 import { useNavigate } from 'react-router-dom';
 import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
-import { PAYMCOMPANIES, PAYMBRANCHES, SAVE } from '../../serverconfiguration/controllers';
+import { PAYMCOMPANIES, PAYMBRANCHES, SAVE,REPORTS } from '../../serverconfiguration/controllers';
 
-export default function JobStatusForm() {
+export default function JobStatusFormMaster() {
   const navigate = useNavigate();
 
-  const [companies, setCompanies] = useState([]);
-  const [branches, setBranches] = useState([]);
+  const [company, setCompany] = useState([]);
+  const [branch, setBranch] = useState([]); 
   const [filteredBranches, setFilteredBranches] = useState([]);
   const [pnCompanyId, setPnCompanyId] = useState('');
   const [pnBranchId, setPnBranchId] = useState('');
   const [vJobStatusName, setVJobStatusName] = useState('');
   const [status, setStatus] = useState('');
-
   const [companyError, setCompanyError] = useState(false);
   const [branchError, setBranchError] = useState(false);
   const [jobStatusNameError, setJobStatusNameError] = useState(false);
   const [statusError, setStatusError] = useState(false);
+  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
 
   useEffect(() => {
-    async function fetchData() {
+    async function getData() {
       try {
-        const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
-        setCompanies(companyData.data);
-
-        const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
-        setBranches(branchData.data);
-        setFilteredBranches(branchData.data); // Initialize with all branches
+        const companyData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+        });
+        console.log(companyData.data);
+        setCompany(companyData.data);
+        if (companyData.data.length > 0) {
+          setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     }
-
-    fetchData();
+    getData();
   }, []);
 
+
   useEffect(() => {
-    if (pnCompanyId) {
-      const filtered = branches.filter(branch => branch.pnCompanyId === pnCompanyId);
-      setFilteredBranches(filtered);
-      setPnBranchId(''); // Reset branch selection
-    } else {
-      setFilteredBranches(branches); // Show all branches if no company is selected
+    async function getData() {
+      try {
+        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
+        });
+        console.log("Branch data", BranchData.data)
+        setBranch(BranchData.data);
+       
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     }
-  }, [pnCompanyId, branches]);
+    getData();
+    console.log("Branch", branch)
+  }, [company]);
+
+ 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,7 +128,7 @@ export default function JobStatusForm() {
 
       if (response.status === 200) {
         alert('Data saved successfully');
-        navigate('/JobStatusTable'); // Redirect or handle as needed
+        navigate('/LevelFormMaster'); // Redirect or handle as needed
       } else {
         alert('Failed to save data');
       }
@@ -133,61 +144,52 @@ export default function JobStatusForm() {
         <Card style={{ maxWidth: 600, margin: '0 auto' }}>
           <CardContent>
             <Typography variant="h5" color="textPrimary" align="center">
-              Job Status Form
+              Job Status 
             </Typography>
+            
             <form onSubmit={handleSubmit}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={pnCompanyId}
-                      onChange={handleChange}
-                      name="pnCompanyId"
-                      displayEmpty
-                      style={{ height: '50px' }}
-                    >
-                      <MenuItem value="">
-                        Select a Company
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={companyError}>
+                <TextField
+  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
+  variant="outlined"
+  fullWidth
+  InputProps={{ readOnly: true }}
+/>
+
+                  {companyError && (
+                    <FormHelperText sx={{ color: 'error.main' }}>
+                      Please select a CompanyID
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth error={branchError}>
+                  <Select
+                    value={pnBranchId}
+                    onChange={handleChange}
+                    name="pnBranchId"
+                    displayEmpty
+                    sx={{ height: '50px' }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select a BranchID
+                    </MenuItem>
+                    {branch.map((e) => (
+                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
+                        {e.BranchName}
                       </MenuItem>
-                      {companies.map((company) => (
-                        <MenuItem key={company.pnCompanyId} value={company.pnCompanyId}>
-                          {company.companyName}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {companyError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please select a Company
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <Select
-                      value={pnBranchId}
-                      onChange={handleChange}
-                      name="pnBranchId"
-                      displayEmpty
-                      style={{ height: '50px' }}
-                      disabled={!pnCompanyId} // Disable branch dropdown if no company is selected
-                    >
-                      <MenuItem value="">
-                        Select a Branch
-                      </MenuItem>
-                      {filteredBranches.map((branch) => (
-                        <MenuItem key={branch.pnBranchId} value={branch.pnBranchId}>
-                          {branch.branchName}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {branchError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please select a Branch
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
+                    ))}
+                  </Select>
+                  {branchError && (
+                    <FormHelperText sx={{ color: 'error.main' }}>
+                      Please select a BranchID
+                    </FormHelperText>
+                  )}
+                </FormControl>
+              </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth error={jobStatusNameError}>
                     <TextField

@@ -8,12 +8,14 @@ import { REPORTS } from '../../serverconfiguration/controllers';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 
-const CompanyMasters = () => {
+const CompanyMasterss = () => {
   const [tabValue, setTabValue] = useState(0);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
   const [popoverMessage, setPopoverMessage] = useState('');
+  const navigate = useNavigate();
 
   const validationSchema = yup.object({
     companyName: yup
@@ -89,6 +91,16 @@ const CompanyMasters = () => {
       .date()
       .required('End Date is required')
       .min(yup.ref('startDate'), 'End Date cannot be before Start Date'),
+      companyUserId: yup
+      .string()
+      .matches(/^[a-zA-Z0-9_]+$/, 'Company User ID can only contain letters, numbers, and underscores')
+      .max(10, 'Branch User ID should be at most 10 characters')
+      .required('Branch User ID is required'),
+
+      companyPassword: yup
+      .string()
+      .matches(/^[a-zA-Z0-9]{1,8}$/, 'Company Password must be 8 characters long and include at least one letter, one number, and one special character')
+      .required('Company Password is required'),
   });
 
   const formik = useFormik({
@@ -109,6 +121,8 @@ const CompanyMasters = () => {
       esiNo: '',
       startDate: '',
       endDate: '',
+      companyUserId: '',
+      companyPassword: '',
     },
     validationSchema: validationSchema,
     onSubmit: (values) => {
@@ -133,7 +147,7 @@ const CompanyMasters = () => {
 
   const fetchLocationDetails = async (zipcode) => {
     try {
-      const response = await axios.get(`https://api.postalpincode.in/pincode/${zipcode}`);
+      const response = await axios.get`(https://api.postalpincode.in/pincode/${zipcode})`;
       const data = response.data[0];
       if (data.Status === 'Success') {
         const locationData = data.PostOffice[0];
@@ -147,7 +161,6 @@ const CompanyMasters = () => {
       console.error('Error fetching location details:', error);
     }
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     formik.handleChange(e);
@@ -155,11 +168,10 @@ const CompanyMasters = () => {
       fetchLocationDetails(value);
     }
   };
-
   const isValid = () => {
     const errors = formik.errors;
     if (tabValue === 0) {
-      return !errors.companyName && !errors.companyCode;
+      return !errors.companyName && !errors.companyCode && !errors.companyUserId && !errors.companyPassword;;
     } else if (tabValue === 1) {
       return !errors.addressLine1 && !errors.city && !errors.state && !errors.country && !errors.ZipCode;
     } else if (tabValue === 2) {
@@ -189,26 +201,27 @@ const CompanyMasters = () => {
     try {
       const query = `
         INSERT INTO [dbo].[paym_Company] 
-        ([CompanyCode], [CompanyName], [Address_Line1], [Address_Line2], [City], [State], [Country], [ZipCode], [Phone_No], [Fax_No], [Email_Id], [AlternateEmail_Id], [PFno], [Esino], [start_date], [end_date])
+        ([CompanyCode], [CompanyName], [Address_Line1], [Address_Line2], [City], [State], [Country], [ZipCode], [Phone_No], [Fax_No], [Email_Id], [AlternateEmail_Id], [PFno], [Esino], [start_date], [end_date], [Company_User_Id], [Company_Password])
         VALUES 
-        ('${formData.companyCode}', '${formData.companyName}', '${formData.addressLine1}', '${formData.addressLine2}', '${formData.city}', '${formData.state}', '${formData.country}', '${formData.ZipCode}', '${formData.phoneNumber}', '${formData.faxNo}', '${formData.emailAddress}', '${formData.alternateEmailAddress}', '${formData.pfNo}', '${formData.esiNo}', '${formData.startDate}', '${formData.endDate}')
+        ('${formData.companyCode}', '${formData.companyName}', '${formData.addressLine1}', '${formData.addressLine2}', '${formData.city}', '${formData.state}', '${formData.country}', '${formData.ZipCode}', '${formData.phoneNumber}', '${formData.faxNo}', '${formData.emailAddress}', '${formData.alternateEmailAddress}', '${formData.pfNo}', '${formData.esiNo}', '${formData.startDate}', '${formData.endDate}','${formik.values.companyUserId}', '${formik.values.companyPassword}')
       `;
 
       const response = await postRequest(ServerConfig.url, REPORTS, { query });
 
       if (response.status === 200) {
         alert('Data saved successfully!');
+        navigate("/PayBranchForm01");
       } else {
-        alert(`Unexpected response status: ${response.status}`);
+        alert`(Unexpected response status: ${response.status})`;
       }
     } catch (error) {
       console.error('Error in postData:', error);
       if (error.response) {
-        alert(`Server responded with error: ${error.response.status} - ${error.response.statusText}`);
+        alert`(Server responded with error: ${error.response.status} - ${error.response.statusText})`;
       } else if (error.request) {
         alert('No response received from server');
       } else {
-        alert(`Request error: ${error.message}`);
+        alert`(Request error: ${error.message})`;
       }
     }
   };
@@ -260,6 +273,38 @@ const CompanyMasters = () => {
                     fullWidth
                   />
                 </Grid>
+                <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Company User Id"
+                            name="companyUserId"
+                            autoComplete="off"
+                            value={formik.values.companyUserId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.companyUserId && Boolean(formik.errors.companyUserId)}
+                            helperText={formik.touched.companyUserId && formik.errors.companyUserId}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                        <TextField
+    fullWidth
+    size="small"
+    label="Company Password"
+    name="companyPassword"
+    type="password"
+    autoComplete="new-password"
+    value={formik.values.companyPassword}
+    onChange={formik.handleChange}
+    onBlur={formik.handleBlur}
+    error={formik.touched.companyPassword && Boolean(formik.errors.companyPassword)}
+    helperText={formik.touched.companyPassword && formik.errors.companyPassword}
+    InputLabelProps={{ shrink: true }}
+  />
+                        </Grid>
+
               </Grid>
             )}
             {tabValue === 1 && (
@@ -494,4 +539,4 @@ const CompanyMasters = () => {
   );
 };
 
-export default CompanyMasters;
+export default CompanyMasterss;

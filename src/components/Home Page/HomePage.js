@@ -40,7 +40,7 @@ export default function HomePage() {
     const navigate = useNavigate();
 
     const cardItems = [
-        { text: "Masters", icon: <SchoolIcon /> ,onclick : () => navigate('/Masters')  },
+        { text: "Masters", icon: <SchoolIcon /> ,onclick : () => navigate('/MastersTemplate')  },
         { text: "Setup", icon: <WorkIcon /> },
         { text: "Attendance", icon: <TodayIcon />, onclick : () => navigate('/Attendance') },
         { text: "Leave", icon: <AssignmentIcon /> },

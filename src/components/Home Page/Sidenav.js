@@ -15,7 +15,6 @@ import ListItemText from "@mui/material/ListItemText";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PaymentIcon from '@mui/icons-material/Payment';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import ArticleIcon from '@mui/icons-material/Article';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import InfoIcon from '@mui/icons-material/Info';
@@ -27,7 +26,8 @@ import { useNavigate } from "react-router-dom";
 import { useAppStore } from "./appStore";
 import { useLocation } from 'react-router-dom';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-const drawerWidth = 225;
+
+const drawerWidth = 200;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -67,24 +67,20 @@ const Drawer = styled(MuiDrawer, {
   flexShrink: 0,
   whiteSpace: "nowrap",
   boxSizing: "border-box",
-  zIndex: theme.zIndex.drawer,
   ...(open && {
     ...openedMixin(theme),
-    "& .MuiDrawer-paper": openedMixin(theme),
+    "& .MuiDrawer-paper": {
+      ...openedMixin(theme),
+      overflowY: "auto", // Allow scrolling when the drawer is open
+    },
   }),
   ...(!open && {
     ...closedMixin(theme),
-    "& .MuiDrawer-paper": closedMixin(theme),
+    "& .MuiDrawer-paper": {
+      ...closedMixin(theme),
+      overflowY: "auto", // Allow scrolling when the drawer is closed
+    },
   }),
-}));
-
-const TemporaryDrawer = styled(MuiDrawer)(({ theme }) => ({
-  width: "100%",
-  flexShrink: 0,
-  "& .MuiDrawer-paper": {
-    width: "100%",
-    backgroundColor: "black",
-  },
 }));
 
 export default function Sidenav() {
@@ -97,27 +93,31 @@ export default function Sidenav() {
   const isLoggedIn = sessionStorage.getItem("user") !== null;
   const [openAttendance, setOpenAttendance] = React.useState(false);
 
-const handleAttendanceClick = () => {
-  setOpenAttendance(!openAttendance);
-};
+  const handleAttendanceClick = () => {
+    setOpenAttendance(!openAttendance);
+  };
+
   const handleDrawerToggle = () => {
-    if (location.pathname === "/DBoards") {
+    if (location.pathname === "/Masters") {
       navigate("/"); // Navigate to the home page if already on the DBoards page
     } else {
       updateOpen(!open);
-      navigate("/DBoards"); // Navigate to the DBoards page when the dashboard button is clicked
+      navigate("/Masters"); // Navigate to the DBoards page when the dashboard button is clicked
     }
   };
+
   const handleLeaveClick = () => {
     setOpenLeave(!openLeave);
   };
+
   const location = useLocation();
+
   const handleSalaryClick = () => {
     setOpenSalary(!openSalary);
   };
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', height: '100vh' }}>
       <CssBaseline />
       
       {/* Permanent Drawer for Large Screens */}
@@ -129,66 +129,42 @@ const handleAttendanceClick = () => {
         </DrawerHeader>
         <Divider />
         <List>
-        <ListItem disablePadding sx={{ display: "block" }} onClick={handleDrawerToggle}>
-  <ListItemButton
-    sx={{
-      minHeight: 48,
-      justifyContent: open ? "initial" : "center",
-      px: 2.5,
-      transition: "transform 0.4s ease-in-out",
-      "&:hover": {
-        backgroundColor: "#7f7f7f",
-        transform: "scale(1.10)",
-      },
-    }}
-  >
-    <ListItemIcon
-      sx={{
-        color: "white",
-        minWidth: 0,
-        mr: open ? 3 : "auto",
-        justifyContent: "center",
-      }}
-    >
-      <DashboardIcon />
-    </ListItemIcon>
-    <ListItemText primary="Dashboard" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-  </ListItemButton>
-</ListItem>
+        
+{/* 
+          <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/Attendancewise1")}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? "initial" : "center",
+                px: 2.5,
+                transition: "transform 0.4s ease-in-out",
+                "&:hover": {
+                  backgroundColor: "#7f7f7f",
+                  transform: "scale(1.10)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: "white",
+                  minWidth: 0,
+                  mr: open ? 3 : "auto",
+                  justifyContent: "center",
+                }}
+              >
+                <AccessTimeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Attendance" sx={{ opacity: open ? 1 : 0, color: "white" }} />
+              {open && (
+                <Collapse in={openAttendance} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                   
+                  </List>
+                </Collapse>
+              )}
+            </ListItemButton>
+          </ListItem> */}
 
-<ListItem disablePadding sx={{ display: "block" }}  onClick={() => navigate("/Attendancewise1")}>
-  <ListItemButton
-    sx={{
-      minHeight: 48,
-      justifyContent: open ? "initial" : "center",
-      px: 2.5,
-      transition: "transform 0.4s ease-in-out",
-      "&:hover": {
-        backgroundColor: "#7f7f7f",
-        transform: "scale(1.10)",
-      },
-    }}
-  >
-    <ListItemIcon
-      sx={{
-        color: "white",
-        minWidth: 0,
-        mr: open ? 3 : "auto",
-        justifyContent: "center",
-      }}
-    >
-      <AccessTimeIcon />
-    </ListItemIcon>
-    <ListItemText primary="Attendance" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-    {open && (
-  <Collapse in={openAttendance} timeout="auto" unmountOnExit>
-    <List component="div" disablePadding>
-      {/* Add your Attendance sub-items here */}
-    </List>
-  </Collapse>
-)}  
-</ListItemButton>
-</ListItem>
           <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/HomePage")}>
             <ListItemButton
               sx={{
@@ -215,6 +191,33 @@ const handleAttendanceClick = () => {
               <ListItemText primary="Home" sx={{ opacity: open ? 1 : 0, color: "white" }} />
             </ListItemButton>
           </ListItem>
+  <ListItem disablePadding sx={{ display: "block" }}  onClick={() => navigate("/MastersTemplate")}>
+            <ListItemButton
+              sx={{
+                minHeight: 48,
+                justifyContent: open ? "initial" : "center",
+                px: 2.5,
+                transition: "transform 0.4s ease-in-out",
+                "&:hover": {
+                  backgroundColor: "#7f7f7f",
+                  transform: "scale(1.10)",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: "white",
+                  minWidth: 0,
+                  mr: open ? 3 : "auto",
+                  justifyContent: "center",
+                }}
+              >
+                <DashboardIcon />
+              </ListItemIcon>
+              <ListItemText primary="Master" sx={{ opacity: open ? 1 : 0, color: "white" }} />
+            </ListItemButton>
+          </ListItem>
+{/* 
           <ListItem disablePadding sx={{ display: "block" }} onClick={handleSalaryClick}>
             <ListItemButton
               sx={{
@@ -242,6 +245,7 @@ const handleAttendanceClick = () => {
               {open && (openSalary ? <ExpandLessIcon sx={{ color: "white" }} /> : <ExpandMoreIcon sx={{ color: "white" }} />)}
             </ListItemButton>
           </ListItem>
+
           {open && (
             <Collapse in={openSalary} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
@@ -258,9 +262,10 @@ const handleAttendanceClick = () => {
                       },
                     }}
                   >
-                    <ListItemText primary="Payslip" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
+                    <ListItemText primary="View Salary" sx={{ opacity: open ? 1 : 0, color: "white" }} />
                   </ListItemButton>
                 </ListItem>
+
                 <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/salary/history")}>
                   <ListItemButton
                     sx={{
@@ -274,78 +279,13 @@ const handleAttendanceClick = () => {
                       },
                     }}
                   >
-                    <ListItemText primary="Loans" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
+                    <ListItemText primary="Salary History" sx={{ opacity: open ? 1 : 0, color: "white" }} />
                   </ListItemButton>
                 </ListItem>
               </List>
             </Collapse>
-          )}
-          <ListItem disablePadding sx={{ display: "block" }} onClick={handleLeaveClick}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <CalendarTodayIcon />
-              </ListItemIcon>
-              <ListItemText primary="Leave" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-              {open && (openLeave ? <ExpandLessIcon sx={{ color: "white" }} /> : <ExpandMoreIcon sx={{ color: "white" }} />)}
-            </ListItemButton>
-          </ListItem>
-          {open && (
-            <Collapse in={openLeave} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/LeaveApply")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Leave Apply" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/LeaveRequestManager")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Leave Requests" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-              </List>
-            </Collapse>
-          )}
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/info")}>
+          )} */}
+            <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/info")}>
             <ListItemButton
               sx={{
                 minHeight: 48,
@@ -375,11 +315,7 @@ const handleAttendanceClick = () => {
       </Drawer>
 
       {/* Temporary Drawer for Small Screens */}
-      <TemporaryDrawer
-        variant="persistent"
-        open={open}
-        sx={{ display: { xs: 'block', sm: 'none' } }}
-      >
+      <Drawer variant="temporary" open={open} onClose={handleDrawerToggle} sx={{ display: { xs: 'block', sm: 'none' } }}>
         <DrawerHeader>
           <IconButton onClick={handleDrawerToggle}>
             {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -387,248 +323,9 @@ const handleAttendanceClick = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <Box sx={{ display: "flex", alignItems: "center", marginLeft: 2 }}>
-              <Avatar>{sessionStorage.getItem("user").charAt(0)}</Avatar>
-              <Typography color={"white"} sx={{ margin: 2 }}>
-                {sessionStorage.getItem("user")}
-              </Typography>
-            </Box>
-          </ListItem>
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/DBoards")}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <DashboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Dashboard" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/HomePage")}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <HomeIcon />
-              </ListItemIcon>
-              <ListItemText primary="Home" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding sx={{ display: "block" }} onClick={handleSalaryClick}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <PaymentIcon />
-              </ListItemIcon>
-              <ListItemText primary="Salary" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-              {open && (openSalary ? <ExpandLessIcon sx={{ color: "white" }} /> : <ExpandMoreIcon sx={{ color: "white" }} />)}
-            </ListItemButton>
-          </ListItem>
-          {open && (
-            <Collapse in={openSalary} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/salary/view")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Payslip" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/salary/history")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Loans" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-              </List>
-            </Collapse>
-          )}
-          <ListItem disablePadding sx={{ display: "block" }} onClick={handleLeaveClick}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <CalendarTodayIcon />
-              </ListItemIcon>
-              <ListItemText primary="Leave" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-              {open && (openLeave ? <ExpandLessIcon sx={{ color: "white" }} /> : <ExpandMoreIcon sx={{ color: "white" }} />)}
-            </ListItemButton>
-          </ListItem>
-          {open && (
-            <Collapse in={openLeave} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/leave/overview")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Overview" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-                <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/leave/requests")}>
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                      transition: "transform 0.4s ease-in-out",
-                      "&:hover": {
-                        backgroundColor: "#7f7f7f",
-                        transform: "scale(1.10)",
-                      },
-                    }}
-                  >
-                    <ListItemText primary="Requests" sx={{ opacity: open ? 1 : 0, color: "white", marginLeft: "50px" }} />
-                  </ListItemButton>
-                </ListItem>
-              </List>
-            </Collapse>
-          )}
-          <ListItem disablePadding sx={{ display: "block" }} onClick={() => navigate("/info")}>
-            <ListItemButton
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                transition: "transform 0.4s ease-in-out",
-                "&:hover": {
-                  backgroundColor: "#7f7f7f",
-                  transform: "scale(1.10)",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  color: "white",
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                <InfoIcon />
-              </ListItemIcon>
-              <ListItemText primary="Info" sx={{ opacity: open ? 1 : 0, color: "white" }} />
-            </ListItemButton>
-          </ListItem>
+          {/* Same list items as in the permanent drawer */}
         </List>
-      </TemporaryDrawer>
-
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          bgcolor: theme.palette.background.default,
-          p: 3,
-          transition: theme.transitions.create("margin", {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          marginLeft: `-${drawerWidth}px`,
-          ...(open && {
-            transition: theme.transitions.create("margin", {
-              easing: theme.transitions.easing.easeOut,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-            marginLeft: 0,
-          }),
-        }}
-      >
-        {/* Add your content here */}
-      </Box>
+      </Drawer>
     </Box>
   );
 }

@@ -15,49 +15,76 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
-import { PAYMBRANCHES, PAYMCOMPANIES, PAYMDIVISION, SAVE } from '../../serverconfiguration/controllers';
+import { PAYMBRANCHES, PAYMCOMPANIES, PAYMDIVISION, SAVE,REPORTS } from '../../serverconfiguration/controllers';
 
 export default function DivisionMaster() {
   const navigate = useNavigate();
 
   const [company, setCompany] = useState([]);
-  const [branchData, setBranchData] = useState([]); // Raw branch data
+  const [branch, setBranch] = useState([]); // Raw branch data
   const [filteredBranches, setFilteredBranches] = useState([]); // Branches filtered by selected company
   const [pnCompanyId, setPnCompanyId] = useState("");
   const [pnBranchId, setPnBranchId] = useState("");
   const [vDivisionName, setVDivisionName] = useState("");
   const [status, setStatus] = useState("");
-
   const [companyError, setCompanyError] = useState(false);
   const [branchError, setBranchError] = useState(false);
   const [divisionNameError, setDivisionNameError] = useState(false);
   const [statusError, setStatusError] = useState(false);
+  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
+
+
+  // useEffect(() => {
+  //   async function getData() {
+  //     try {
+  //       const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
+  //       setCompany(companyData.data);
+
+  //       const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
+  //       setBranch(branchData.data);
+  //       setFilteredBranches(branchData.data); // Initialize with all branches
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //   }
+  //   getData();
+  // }, []);
 
   useEffect(() => {
     async function getData() {
       try {
-        const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
+        const companyData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+        });
+        console.log(companyData.data);
         setCompany(companyData.data);
-
-        const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
-        setBranchData(branchData.data);
-        setFilteredBranches(branchData.data); // Initialize with all branches
+        if (companyData.data.length > 0) {
+          setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     }
     getData();
   }, []);
-
+  
   useEffect(() => {
-    if (pnCompanyId) {
-      const filtered = branchData.filter(branch => branch.pnCompanyId === pnCompanyId);
-      setFilteredBranches(filtered);
-      setPnBranchId(''); // Reset branch selection
-    } else {
-      setFilteredBranches(branchData); // Show all branches if no company is selected
+    async function getData() {
+      try {
+        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
+        });
+        console.log("Branch data", BranchData.data)
+        setBranch(BranchData.data);
+       
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
     }
-  }, [pnCompanyId, branchData]);
+    getData();
+    console.log("Branch", branch)
+  }, [company]);
+
 
   const validateForm = () => {
     const isCompanyValid = !!pnCompanyId;
@@ -86,7 +113,7 @@ export default function DivisionMaster() {
 
       if (response.status === 200) {
         alert('Data saved successfully');
-        navigate('/PaymDivisionTable');
+        navigate('/GradeForm001');
       } else {
         alert('Failed to save data');
       }
@@ -142,26 +169,18 @@ export default function DivisionMaster() {
           </Typography>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+            <Grid item xs={12} sm={6}>
                 <FormControl fullWidth error={companyError}>
-                  <Select
-                    value={pnCompanyId}
-                    onChange={handleChange}
-                    name="pnCompanyId"
-                    displayEmpty
-                  >
-                    <MenuItem value="">
-                      <em>Select a Company</em>
-                    </MenuItem>
-                    {company.map((e) => (
-                      <MenuItem key={e.pnCompanyId} value={e.pnCompanyId}>
-                        {e.companyName}
-                      </MenuItem>
-                    ))}
-                  </Select>
+                <TextField
+  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
+  variant="outlined"
+  fullWidth
+  InputProps={{ readOnly: true }}
+/>
+
                   {companyError && (
                     <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a company
+                      Please select a CompanyID
                     </FormHelperText>
                   )}
                 </FormControl>
@@ -174,20 +193,20 @@ export default function DivisionMaster() {
                     onChange={handleChange}
                     name="pnBranchId"
                     displayEmpty
-                    disabled={!pnCompanyId} // Disable branch dropdown if no company is selected
+                    sx={{ height: '50px' }}
                   >
-                    <MenuItem value="">
-                      <em>Select a Branch</em>
+                    <MenuItem value="" disabled>
+                      Select a BranchID
                     </MenuItem>
-                    {filteredBranches.map((e) => (
-                      <MenuItem key={e.pnBranchId} value={e.pnBranchId}>
-                        {e.branchName}
+                    {branch.map((e) => (
+                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
+                        {e.BranchName}
                       </MenuItem>
                     ))}
                   </Select>
                   {branchError && (
                     <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a branch
+                      Please select a BranchID
                     </FormHelperText>
                   )}
                 </FormControl>

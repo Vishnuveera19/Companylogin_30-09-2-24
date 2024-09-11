@@ -1,4 +1,4 @@
-import { Grid, Card, TextField, Button, Typography, Box, CardContent, FormControl, InputLabel } from '@mui/material';
+import { Grid, Card, TextField, Button, Typography, Box, CardContent, FormControl, InputLabel,MenuItem,Select } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { PAYMEMPLOYEE, PAYMCOMPANIES, PAYMBRANCHES, PAYMLEAVE } from '../../serverconfiguration/controllers';
 import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
@@ -20,6 +20,8 @@ export default function PaymLeaveMaster() {
     const [maxDays, setMaxDays] = useState("");
     const [el, setEl] = useState("");
     const [type, setType] = useState("");
+    const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
+
 
     const [errors, setErrors] = useState({});
 
@@ -40,6 +42,22 @@ export default function PaymLeaveMaster() {
         return Object.values(temp).every(x => x === "");
     };
 
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+    
+        switch (name) {
+          case 'pnCompanyId':
+            setPnCompanyId(value);
+           
+            break;
+          case 'pnBranchId':
+            setPnBranchId(value);
+           
+            break;
+          
+        }
+      };
+
     const handleSave = async () => {
         if (validate()) {
             try {
@@ -49,6 +67,7 @@ export default function PaymLeaveMaster() {
 
                 if (response.status === 200) {
                     alert('Data saved successfully');
+                    navigate("/Group");
                 } else {
                     alert('Failed to save data');
                 }
@@ -61,13 +80,39 @@ export default function PaymLeaveMaster() {
 
     useEffect(() => {
         async function getData() {
-            const data = await getRequest(ServerConfig.url, PAYMCOMPANIES);
-            setCompany(data.data);
-            const data1 = await getRequest(ServerConfig.url, PAYMBRANCHES);
-            setBranch(data1.data);
+          try {
+            const companyData = await postRequest(ServerConfig.url, REPORTS, {
+              "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+            });
+            console.log(companyData.data);
+            setCompany(companyData.data);
+            if (companyData.data.length > 0) {
+              setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
+            }
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
         }
         getData();
-    }, []);
+      }, []);
+
+      useEffect(() => {
+        async function getData() {
+          try {
+            const BranchData = await postRequest(ServerConfig.url, REPORTS, {
+              "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
+            });
+            console.log("Branch data", BranchData.data)
+            setBranch(BranchData.data);
+           
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        }
+        getData();
+        console.log("Branch", branch)
+      }, [company]);
+    
 
     return (
         <Box sx={{ padding: '40px 10px', maxWidth: 600, margin: '0 auto' }}>
@@ -78,35 +123,36 @@ export default function PaymLeaveMaster() {
                     </Typography>
                     <form>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel shrink>Company</InputLabel>
-                                    <select
-                                        name="pnCompanyId"
-                                        onChange={(e) => setPnCompanyId(e.target.value)}
-                                        style={{ height: '50px' }}
-                                    >
-                                        <option value="">Select</option>
-                                        {company.map((e) => <option key={e.pnCompanyId} value={e.pnCompanyId}>{e.pnCompanyId}</option>)}
-                                    </select>
-                                    {errors.pnCompanyId && <Typography color="error">{errors.pnCompanyId}</Typography>}
-                                </FormControl>
-                            </Grid>
+                        <Grid item xs={12} sm={6}>
+                <TextField
+  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
+  variant="outlined"
+  fullWidth
+  InputProps={{ readOnly: true }}
+/>
 
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel shrink>Branch ID</InputLabel>
-                                    <select
-                                        name="branchId"
-                                        onChange={(e) => setPnBranchId(e.target.value)}
-                                        style={{ height: '50px' }}
-                                    >
-                                        <option value="">Select</option>
-                                        {branch.map((e) => <option key={e.pnBranchId} value={e.pnBranchId}>{e.pnBranchId}</option>)}
-                                    </select>
-                                    {errors.pnBranchId && <Typography color="error">{errors.pnBranchId}</Typography>}
-                                </FormControl>
-                            </Grid>
+                  
+              </Grid>
+              <Grid item xs={12} sm={6}>
+              <FormControl fullWidth>
+                  <Select
+                    value={pnBranchId}
+                    onChange={handleChange}
+                    name="pnBranchId"
+                    displayEmpty
+                    sx={{ height: '50px' }}
+                  >
+                    <MenuItem value="" disabled>
+                      Select a BranchID
+                    </MenuItem>
+                    {branch.map((e) => (
+                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
+                        {e.BranchName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  </FormControl>
+              </Grid>
 
                             <Grid item xs={12} sm={6}>
                                 <FormControl fullWidth>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
-import { PAYMBRANCHES, PAYMCOMPANIES, SAVE } from '../../serverconfiguration/controllers';
+import { PAYMBRANCHES, PAYMCOMPANIES, SAVE,REPORTS } from '../../serverconfiguration/controllers';
 
 export default function GradeForm001() {
   const navigate = useNavigate();
@@ -13,23 +13,40 @@ export default function GradeForm001() {
   const [pnBranchId, setPnBranchId] = useState("");
   const [vGradeName, setVGradeName] = useState("");
   const [status, setStatus] = useState("");
+  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
 
   // State to handle validation errors
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    async function getData() {
-      try {
-        const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
-        setCompany(companyData.data);
-        const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
-        setBranch(branchData.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
+  // useEffect(() => {
+  //   async function getData() {
+  //     try {
+  //       const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
+  //       setCompany(companyData.data);
+  //       const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
+  //       setBranch(branchData.data);
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //   }
+  //   getData();
+  // }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    switch (name) {
+      case 'pnCompanyId':
+        setPnCompanyId(value);
+       
+        break;
+      case 'pnBranchId':
+        setPnBranchId(value);
+       
+        break;
+      
     }
-    getData();
-  }, []);
+  };
 
   const handleSave = async () => {
     // Validate the form before submitting
@@ -50,9 +67,10 @@ export default function GradeForm001() {
 
         if (response.status === 200) {
           alert('Data saved successfully');
+          navigate("/ShiftFormMaster");
           // Optionally reset form
-          setPnCompanyId("");
-          setPnBranchId("");
+          // setPnCompanyId("");
+          // setPnBranchId("");
           setVGradeName("");
           setStatus("");
         } else {
@@ -64,6 +82,43 @@ export default function GradeForm001() {
       }
     }
   };
+  
+
+  useEffect(() => {
+    async function getData() {
+      try {
+        const companyData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+        });
+        console.log(companyData.data);
+        setCompany(companyData.data);
+        if (companyData.data.length > 0) {
+          setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    getData();
+  }, []);
+  
+  useEffect(() => {
+    async function getData() {
+      try {
+        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
+          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
+        });
+        console.log("Branch data", BranchData.data)
+        setBranch(BranchData.data);
+       
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+    getData();
+    console.log("Branch", branch)
+  }, [company]);
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -77,51 +132,39 @@ export default function GradeForm001() {
           <Typography variant='h5' color='textPrimary' align='center'>PAYM GRADE</Typography>
           <form onSubmit={handleSubmit}>
             <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={!!errors.pnCompanyId}>
-                  <Select
-                    name="pnCompanyId"
-                    value={pnCompanyId}
-                    onChange={(e) => setPnCompanyId(e.target.value)}
-                    displayEmpty
-                    inputProps={{ 'aria-label': 'Company ID' }}
-                  >
-                    <MenuItem value="">
-                      <em>Select a Company</em>
-                    </MenuItem>
-                    {company.map((e) => (
-                      <MenuItem key={e.pnCompanyId} value={e.pnCompanyId}>
-                        {e.companyName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {!!errors.pnCompanyId && <FormHelperText>{errors.pnCompanyId}</FormHelperText>}
+            <Grid item xs={12} sm={6}>
+            <FormControl fullWidth error={!!errors.pnCompanyId}>
+            <TextField
+  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
+  variant="outlined"
+  fullWidth
+  InputProps={{ readOnly: true }}
+/>
+
+{!!errors.pnCompanyId && <FormHelperText>{errors.pnCompanyId}</FormHelperText>}
                 </FormControl>
               </Grid>
-
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={!!errors.pnBranchId}>
-                  <Select
-                    name="pnBranchId"
+              <FormControl fullWidth error={!!errors.pnBranchId}>
+              <Select
                     value={pnBranchId}
-                    onChange={(e) => setPnBranchId(e.target.value)}
+                    onChange={handleChange}
+                    name="pnBranchId"
                     displayEmpty
-                    inputProps={{ 'aria-label': 'Branch ID' }}
-                    disabled={!pnCompanyId} // Disable if no company is selected
+                    sx={{ height: '50px' }}
                   >
-                    <MenuItem value="">
-                      <em>Select a Branch</em>
+                    <MenuItem value="" disabled>
+                      Select a BranchID
                     </MenuItem>
-                    {branch.filter(b => b.pnCompanyId === pnCompanyId).map((e) => (
-                      <MenuItem key={e.pnBranchId} value={e.pnBranchId}>
-                        {e.branchName}
+                    {branch.map((e) => (
+                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
+                        {e.BranchName}
                       </MenuItem>
                     ))}
                   </Select>
                   {!!errors.pnBranchId && <FormHelperText>{errors.pnBranchId}</FormHelperText>}
                 </FormControl>
               </Grid>
-
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth error={!!errors.vGradeName}>
                   <TextField
@@ -164,7 +207,7 @@ export default function GradeForm001() {
                   }}>
                     RESET
                   </Button>
-                  <Button type="submit" variant='contained' color='primary'>
+                  <Button type="submit" variant='contained' color='primary' >
                     SAVE
                   </Button>
                 </Box>

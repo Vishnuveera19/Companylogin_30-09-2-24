@@ -1,88 +1,172 @@
-import {
-  Grid,
-  Card,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  FormControl,
-  InputLabel,
-  FormHelperText,
-  Tabs,
-  Tab,
-  Container,
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
+import React, { useState, useEffect } from 'react';
+import { TextField, Button, Box, Container, Typography, FormHelperText,Tabs, Tab, Grid, Card, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import Navbar from "../Home Page/Navbar";
+import Sidenav from "../Home Page/Sidenav";
+import { postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
-import { PAYMBRANCHES, PAYMCOMPANIES, REPORTS } from '../../serverconfiguration/controllers';
+import { REPORTS } from '../../serverconfiguration/controllers';
+import { useFormik } from 'formik';
+import * as yup from 'yup';
 import axios from 'axios';
-import Navbar from '../Home Page/Navbar';
-import Sidenav from '../Home Page/Sidenav'
+import Popover from '@mui/material/Popover';
 
-export default function PayBranchForm01() {
-  const navigate = useNavigate();
-  const [company, setCompany] = useState([]);
-  const [pnCompanyId, setPnCompanyId] = useState('');
-  const [branchCode, setBranchCode] = useState('');
-  const [branchName, setBranchName] = useState('');
-  const [addressLine1, setAddressLine1] = useState('');
-  const [addressLine2, setAddressLine2] = useState('');
-  const [city, setCity] = useState('');
-  const [zipCode, setZipCode] = useState('');
-  const [country, setCountry] = useState('');
-  const [state, setState] = useState('');
-  const [phoneNo, setPhoneNo] = useState('');
-  const [faxNo, setFaxNo] = useState('');
-  const [emailId, setEmailId] = useState('');
-  const [alternateEmailId, setAlternateEmailId] = useState('');
-  const [branchUserId, setBranchUserId] = useState('');
-  const [branchPassword, setBranchPassword] = useState('');
-  const [status, setStatus] = useState('');
-  const [pfno, setPfno] = useState('');
-  const [esino, setEsino] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+import { useNavigate } from "react-router-dom";
+
+const PayBranchForm01 = () => {
   const [tabValue, setTabValue] = useState(0);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
+  const [popoverMessage, setPopoverMessage] = useState('');
+const[companies,setCompanies]= useState([]);
+const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
+const [pnCompanyId, setPnCompanyId] = useState('');
+const navigate = useNavigate();
 
-  const [companyError, setCompanyError] = useState(false);
-  const [branchCodeError, setBranchCodeError] = useState(false);
-  const [branchNameError, setBranchNameError] = useState(false);
-  const [addressLine1Error, setAddressLine1Error] = useState(false);
-  const [addressLine2Error, setAddressLine2Error] = useState(false);
-  const [cityError, setCityError] = useState(false);
-  const [zipCodeError, setZipCodeError] = useState(false);
-  const [countryError, setCountryError] = useState(false);
-  const [stateError, setStateError] = useState(false);
-  const [phoneNoError, setPhoneNoError] = useState(false);
-  const [faxNoError, setFaxNoError] = useState(false);
-  const [emailIdError, setEmailIdError] = useState(false);
-  const [alternateEmailIdError, setAlternateEmailIdError] = useState(false);
-  const [branchUserIdError, setBranchUserIdError] = useState(false);
-  const [branchPasswordError, setBranchPasswordError] = useState(false);
-  const [statusError, setStatusError] = useState(false);
-  const [pfnoError, setPfnoError] = useState(false);
-  const [esinoError, setEsinoError] = useState(false);
-  const [startDateError, setStartDateError] = useState(false);
-  const [endDateError, setEndDateError] = useState(false);
+  const validationSchema = yup.object({
+    pnCompanyId: yup.string().required('Company ID is required'),
 
-  useEffect(() => {
-    async function getData() {
-      const data = await getRequest(ServerConfig.url, PAYMCOMPANIES);
-      setCompany(data.data);
+    branchName: yup
+      .string()
+      .max(50, 'Company Name should be at most 50 characters')
+      .required('Company Name is required')
+      .matches(/^[a-zA-Z0-9\s]+$/, 'Company Name should contain only letters, numbers, and spaces'),
+    branchCode: yup
+      .string()
+      .max(20, 'Company Code should be at most 20 characters')
+      .required('Company Code is required')
+      .matches(/^[a-zA-Z0-9]+$/, 'Company Code should contain only letters and numbers'),
+    addressLine1: yup
+      .string()
+      .max(100, 'Address Line 1 should be at most 100 characters')
+      .required('Address Line 1 is required')
+      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 1 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+    addressLine2: yup
+      .string()
+      .max(100, 'Address Line 2 should be at most 100 characters')
+      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 2 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+    city: yup
+      .string()
+      .max(50, 'City should be at most 50 characters')
+      .required('City is required')
+      .matches(/^[a-zA-Z\s]+$/, 'City should contain only letters and spaces'),
+    state: yup
+      .string()
+      .max(50, 'State should be at most 50 characters')
+      .required('State is required')
+      .matches(/^[a-zA-Z\s]+$/, 'State should contain only letters and spaces'),
+    country: yup
+      .string()
+      .max(100, 'Country should be at most 100 characters')
+      .required('Country is required')
+      .matches(/^[a-zA-Z\s]+$/, 'Country should contain only letters and spaces'),
+    zipCode: yup
+      .string()
+      .max(6, 'Zip Code should be at most 6 characters')
+      .required('Zip Code is required')
+      .matches(/^\d{6}$/, 'Zip Code should be 6 digits'),
+    phoneNo: yup
+      .string()
+      .max(50, 'Phone Number should be at most 50 characters')
+      .required('Phone Number is required')
+      .matches(/^\d{10}$/, 'Phone Number should be 10 digits'),
+    faxNo: yup
+      .string()
+      .max(50, 'Fax Number should be at most 50 characters')
+      .required('Fax Number is required')
+      .matches(/^\d{10}$/, 'Fax Number should be 10 digits'),
+    emailId: yup
+      .string()
+      .matches(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/, 'Email must contain only one "@" symbol and be alphanumeric')
+      .max(100, 'Email Address should be at most 100 characters')
+      .required('Email Address is required'),
+
+    alternateEmailId: yup
+      .string()
+      .matches(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/, 'Email must contain only one "@" symbol and be alphanumeric')
+      .max(100, 'Alternate Email Address should be at most 100 characters')
+      .required('Alternate Email Address is required'),
+    branchUserId: yup
+      .string()
+      .matches(/^[a-zA-Z0-9_]+$/, 'Branch User ID can only contain letters, numbers, and underscores')
+      .max(10, 'Branch User ID should be at most 10 characters')
+      .required('Branch User ID is required'),
+
+      branchPassword: yup
+      .string()
+      .required('Password is required')
+      .matches(/^[a-zA-Z0-9]{1,10}$/, 'Password Number should be alphanumeric and at most 20 characters'),
+ 
+    pfno: yup
+      .string()
+      .max(20, 'PF Number should be at most 20 characters')
+      .required('PF Number is required')
+      .matches(/^[a-zA-Z0-9]{1,20}$/, 'PF Number should be alphanumeric and at most 20 characters'),
+    esino: yup
+      .string()
+      .max(20, 'ESI Number should be at most 20 characters')
+      .required('ESI Number is required')
+      .matches(/^\d{10}$/, 'ESI Number should be 10 digits'),
+    status: yup
+      .string()
+      .max(1, 'status Number should be at most 1 characters')
+      .required('status Number is required'),
+    startDate: yup
+      .date()
+      .required('Start Date is required'),
+    endDate: yup
+      .date()
+      .required('End Date is required')
+      .min(yup.ref('startDate'), 'End Date cannot be before Start Date'),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      pnCompanyId: '',
+      branchCode: '',
+      branchName: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      country: '',
+      zipCode: '',
+      phoneNo: '',
+      faxNo: '',
+      emailId: '',
+      alternateEmailId: '',
+      branchUserId: '',
+      branchPassword: '',
+      status: '',
+      pfno: '',
+      esino: '',
+      startDate: '',
+      endDate: '',
+    },
+    validationSchema: validationSchema,
+    onSubmit: (values) => {
+      console.log(values);
+    },
+  });
+
+  const handleTabChange = (event, newValue) => {
+    if (newValue > tabValue) {
+      if (!isValid()) {
+        alert('Please fill all required fields before moving to the next step.');
+        return;
+      }
     }
-    getData();
-  }, []);
+    setTabValue(newValue);
+  };
+
   const fetchLocationDetails = async (zipcode) => {
     try {
-      const response = await axios.get(`https://api.postalpincode.in/pincode/${zipcode}`);
+      const response = await axios.get`(https://api.postalpincode.in/pincode/${zipcode})`;
       const data = response.data[0];
       if (data.Status === 'Success') {
         const locationData = data.PostOffice[0];
-        setCity(locationData.District);
-        setState(locationData.State);
-        setCountry(locationData.Country);
+        formik.setFieldValue('city', locationData.District);
+        formik.setFieldValue('state', locationData.State);
+        formik.setFieldValue('country', locationData.Country);
       } else {
         alert('Invalid Zip Code');
       }
@@ -90,550 +174,565 @@ export default function PayBranchForm01() {
       console.error('Error fetching location details:', error);
     }
   };
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    formik.handleChange(e);
 
-    switch (name) {
-      case 'pnCompanyId':
-        setPnCompanyId(value);
-        setCompanyError(false);
-        break;
-      case 'branchCode':
-        setBranchCode(value);
-        setBranchCodeError(!/^[A-Za-z0-9\s]{1,20}$/.test(value) || !value);
-        break;
-      case 'branchName':
-        setBranchName(value);
-        setBranchNameError(!/^[A-Za-z0-9\s]{1,50}$/.test(value) || !value);
-        break;
-      case 'addressLine1':
-        setAddressLine1(value);
-        setAddressLine1Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(value) || !value);
-        break;
-      case 'addressLine2':
-        setAddressLine2(value);
-        setAddressLine2Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(value) || !value);
-        break;
-      case 'city':
-        setCity(value);
-        setCityError(!/^[A-Za-z0-9\s]{1,100}$/.test(value) || !value);
-        break;
-        case 'zipCode':
-          setZipCode(value);
-          setZipCodeError(!/^[/-{}.,A-Za-z0-9\s]{1,50}$/.test(value) || !value);
-          if (value.length === 6) {
-            fetchLocationDetails(value);
+    if (name === 'zipCode') {
+      if (value.length === 6) {
+        fetchLocationDetails(value);
+      }
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && formik.values.zipCode.length === 6) {
+      fetchLocationDetails(formik.values.zipCode);
+    }
+  };
+
+
+  const isValid = () => {
+    const errors = formik.errors;
+    if (tabValue === 0) {
+      return !errors.branchCode && !errors.branchName && !errors.branchUserId && !errors.branchPassword;
+    } else if (tabValue === 1) {
+      return !errors.addressLine1 && !errors.addressLine2 && !errors.city && !errors.state && !errors.country && !errors.zipCode;
+    } else if (tabValue === 2) {
+      return !errors.phoneNo && !errors.emailId && !errors.alternateEmailId && !errors.pfno && !errors.esino;
+    } else if (tabValue === 3) {
+      return !errors.status && !errors.startDate && !errors.endDate;
+    }
+    return true;
+  };
+
+    const handleNext = async () => {
+      if (!isValid()) return;
+      if (tabValue === 3) {
+        postData();
+      } else {
+        setTabValue(tabValue + 1);
+      }
+    };
+
+    const handleCancel = () => {
+      setTabValue(0);
+      formik.resetForm();
+    };
+    useEffect(() => {
+      async function getData() {
+        try {
+          const companyData = await postRequest(ServerConfig.url, REPORTS, {
+            "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+          });
+          console.log(companyData.data);
+          setCompanies(companyData.data);
+          if (companyData.data.length > 0) {
+            setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
           }
-      case 'country':
-        setCountry(value);
-        setCountryError(!/^[A-Za-z0-9\s]{1,100}$/.test(value) || !value);
-        break;
-      case 'state':
-        setState(value);
-        setStateError(!/^[A-Za-z0-9\s]{1,100}$/.test(value) || !value);
-        break;
-      case 'phoneNo':
-        const phoneNumber = value.replace(/\D/g, '');
-        setPhoneNo(value);
-        setPhoneNoError(phoneNumber.length !== 10);
-        break;
-      case 'faxNo':
-        const faxNoPattern = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/;
-        setFaxNo(value);
-        setFaxNoError(!faxNoPattern.test(value));
-        break;
-      case 'emailId':
-        setEmailId(value.trim());
-        setEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
-        break;
-      case 'alternateEmailId':
-        setAlternateEmailId(value.trim());
-        setAlternateEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
-        break;
-      case 'branchUserId':
-        setBranchUserId(value);
-        setBranchUserIdError(!/^[@$/_(){}:;.,A-Za-z0-9\s]{1,10}$/.test(value) || !value);
-        break;
-      case 'branchPassword':
-        setBranchPassword(value);
-        setBranchPasswordError(!/^[@$*_.,";:{}()/'"A-Za-z0-9\s]{1,10}$/.test(value) || !value);
-        break;
-      case 'status':
-        setStatus(value);
-        setStatusError(!/^[A-Za-z\s]{1}$/.test(value) || !value);
-        break;
-      case 'pfno':
-        setPfno(value);
-        setPfnoError(!/^[A-Za-z0-9\s]{5,10}$/.test(value) || !value);
-        break;
-      case 'esino':
-        setEsino(value);
-        setEsinoError(!/^\d{10,17}$/.test(value) || !value);
-        break;
-      case 'startDate':
-        setStartDate(value);
-        setStartDateError(!value);
-        break;
-      case 'endDate':
-        setEndDate(value);
-        setEndDateError(!value);
-        break;
-      default:
-        break;
-    }
-  };
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+      getData();
+    }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ 
 
-    setCompanyError(!pnCompanyId);
-    setBranchCodeError(!/^[A-Za-z0-9\s]{1,20}$/.test(branchCode) || !branchCode);
-    setBranchNameError(!/^[A-Za-z0-9\s]{1,50}$/.test(branchName) || !branchName);
-    setAddressLine1Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(addressLine1) || !addressLine1);
-    setAddressLine2Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(addressLine2) || !addressLine2);
-    setCityError(!/^[A-Za-z0-9\s]{1,100}$/.test(city) || !city);
-    setZipCodeError(!/^[/-{}.,A-Za-z0-9\s]{1,50}$/.test(zipCode) || !zipCode);
-    setCountryError(!/^[A-Za-z0-9\s]{1,100}$/.test(country) || !country);
-    setStateError(!/^[A-Za-z0-9\s]{1,100}$/.test(state) || !state);
-    setPhoneNoError(!/^\d{10}$/.test(phoneNo));
-    setFaxNoError(!/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/.test(faxNo));
-    setEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailId));
-    setAlternateEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alternateEmailId));
-    setBranchUserIdError(!/^[@$/_(){}:;.,A-Za-z0-9\s]{1,10}$/.test(branchUserId) || !branchUserId);
-    setBranchPasswordError(!/^[@$*_.,";:{}()/'"A-Za-z0-9\s]{1,10}$/.test(branchPassword) || !branchPassword);
-    setStatusError(!/^[A-Za-z\s]{1}$/.test(status));
-    setPfnoError(!/^[A-Za-z0-9\s]{5,10}$/.test(pfno));
-    setEsinoError(!/^\d{10,17}$/.test(esino));
-    setStartDateError(!startDate);
-    setEndDateError(!endDate);
-
-    if (companyError || branchCodeError || branchNameError || addressLine1Error || addressLine2Error || cityError || zipCodeError || countryError || stateError || phoneNoError || faxNoError || emailIdError || alternateEmailIdError || branchUserIdError || branchPasswordError || statusError || pfnoError || esinoError || startDateError || endDateError) {
-      return;
-    }
-
+  const postData = async () => {
     try {
-      await postRequest(ServerConfig.url, REPORTS, {
-        pnCompanyId,
-        branchCode,
-        branchName,
-        addressLine1,
-        addressLine2,
-        city,
-        zipCode,
-        country,
-        state,
-        phoneNo,
-        faxNo,
-        emailId,
-        alternateEmailId,
-        branchUserId,
-        branchPassword,
-        status,
-        pfno,
-        esino,
-        startDate,
-        endDate,
-      });
-      navigate('/success'); // or whatever your success page is
+      const query = `
+       INSERT INTO [dbo].[paym_Branch] 
+([pn_CompanyID], [BranchCode], [BranchName], [Address_Line1], [Address_Line2], [City], [State], [Country], [ZipCode], [Phone_No], [Fax_No], [Email_Id], [AlternateEmail_Id], [Branch_User_Id], [Branch_Password], [status], [PFno], [Esino], [start_date], [end_date])
+VALUES  
+('${formik.values.pnCompanyId}', '${formik.values.branchCode}', '${formik.values.branchName}', '${formik.values.addressLine1}', '${formik.values.addressLine2}', '${formik.values.city}', '${formik.values.state}', '${formik.values.country}', '${formik.values.zipCode}', '${formik.values.phoneNo}', '${formik.values.faxNo}', '${formik.values.emailId}', '${formik.values.alternateEmailId}', '${formik.values.branchUserId}', '${formik.values.branchPassword}', '${formik.values.status || ''}', '${formik.values.pfno || ''}', '${formik.values.esino || ''}', '${formik.values.startDate}', '${formik.values.endDate}') `;
+
+      const response = await postRequest(ServerConfig.url, REPORTS, { query });
+      if (response.status === 200) {
+        alert('Data saved successfully!');
+        navigate("/DepartmentFormMaster");
+        handleCancel();
+      } else {
+        alert`(Unexpected response status: ${response.status})`;
+      }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error in postData:', error);
+      alert`(Error: ${error.message || 'An unknown error occurred'})`;
     }
   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
+  const fetchCompanies = async () => {
+    try {
+      const query = `
+        SELECT [pn_CompanyID] AS pnCompanyId, [companyName]
+      FROM [dbo].[paym_Company]
+    `;
 
-//     setCompanyError(!pnCompanyId);
-//     setBranchCodeError(!/^[A-Za-z0-9\s]{1,20}$/.test(branchCode) || !branchCode);
-//     setBranchNameError(!/^[A-Za-z0-9\s]{1,50}$/.test(branchName) || !branchName);
-//     setAddressLine1Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(addressLine1) || !addressLine1);
-//     setAddressLine2Error(!/^[/-{}(),.A-Za-z0-9\s]{1,100}$/.test(addressLine2) || !addressLine2);
-//     setCityError(!/^[A-Za-z0-9\s]{1,100}$/.test(city) || !city);
-//     setZipCodeError(!/^[/-{}.,A-Za-z0-9\s]{1,50}$/.test(zipCode) || !zipCode);
-//     setCountryError(!/^[A-Za-z0-9\s]{1,100}$/.test(country) || !country);
-//     setStateError(!/^[A-Za-z0-9\s]{1,100}$/.test(state) || !state);
-//     setPhoneNoError(phoneNo.replace(/\D/g, '').length !== 10);
-//     setFaxNoError(!/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/.test(faxNo));
-//     setEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailId));
-//     setAlternateEmailIdError(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alternateEmailId));
-//     setBranchUserIdError(!/^[@$/_(){}:;.,A-Za-z0-9\s]{1,10}$/.test(branchUserId) || !branchUserId);
-//     setBranchPasswordError(!/^[@$*_.,";:{}()/'"A-Za-z0-9\s]{1,10}$/.test(branchPassword) || !branchPassword);
-//     setStatusError(!/^[A-Za-z\s]{1}$/.test(status) || !status);
-//     setPfnoError(!/^[A-Za-z0-9\s]{5,10}$/.test(pfno) || !pfno);
-//     setEsinoError(!/^\d{10,17}$/.test(esino) || !esino);
-//     setStartDateError(!startDate);
-//     setEndDateError(!endDate);
-
-//     if (
-//       !pnCompanyId ||
-//       branchCodeError ||
-//       branchNameError ||
-//       addressLine1Error ||
-//       addressLine2Error ||
-//       cityError ||
-//       zipCodeError ||
-//       countryError ||
-//       stateError ||
-//       phoneNoError ||
-//       faxNoError ||
-//       emailIdError ||
-//       alternateEmailIdError ||
-//       branchUserIdError ||
-//       branchPasswordError ||
-//       statusError ||
-//       pfnoError ||
-//       esinoError ||
-//       startDateError ||
-//       endDateError
-//     ) {
-//       return;
-//     }
-
-//     const branchData = {
-//       pnCompanyId,
-//       branchCode,
-//       branchName,
-//       addressLine1,
-//       addressLine2,
-//       city,
-//       zipCode,
-//       country,
-//       state,
-//       phoneNo,
-//       faxNo,
-//       emailId,
-//       alternateEmailId,
-//       branchUserId,
-//       branchPassword,
-//       status,
-//       pfno,
-//       esino,
-//       startDate,
-//       endDate,
-//     };
-
-//     try {
-
-//       const query = `
-//       INSERT INTO [dbo].[paym_Branch] 
-// ([pn_CompanyID], [BranchCode], [BranchName], [Address_Line1], [Address_Line2], [City], [State], [Country], [ZipCode], [Phone_No], [Fax_No], [Email_Id], [AlternateEmail_Id], [Branch_User_Id], [Branch_Password], [status], [PFno], [Esino], [start_date], [end_date])
-// VALUES 
-// ('${branchData.values.pnCompanyId}', '${branchData.values.branchCode}', '${branchData.values.branchName}', '${branchData.values.addressLine1}', '${branchData.values.addressLine2}', '${branchData.values.city}', '${branchData.values.state}', '${branchData.values.country}', '${branchData.values.zipCode}', '${branchData.values.phoneNo}', '${branchData.values.faxNo}', '${branchData.values.emailId}', '${branchData.values.alternateEmailId}', '${branchData.values.branchUserId}', '${branchData.values.branchPassword}', '${branchData.values.status || ''}', '${branchData.values.pfno || ''}', '${branchData.values.esino || ''}', '${branchData.values.startDate}', '${branchData.values.endDate}') `;
-
-//       await postRequest(ServerConfig.url, REPORTS,  { query });
-//       alert('Data Submitted Successfully');
-//       navigate('/some-route'); // Update with your desired route
-//     } catch (error) {
-//       console.error('Error submitting data:', error);
-//       alert('Failed to submit data');
-//     }
-//   };
-
-
-  
-
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
+      const response = await postRequest(ServerConfig.url, REPORTS, { query });
+      if (response.status === 200) {
+        return response.data || [];
+      } else {
+        console.error`(Unexpected response status: ${response.status})`;
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching companies data:', error);
+      return [];
+    }
   };
+
+  useEffect(() => {
+    async function getCompaniesData() {
+      try {
+        const response = await fetchCompanies();
+        if (Array.isArray(response)) {
+          setCompanies(response);
+        }
+      } catch (error) {
+        console.error('Error fetching companies:', error);
+      }
+    }
+
+    getCompaniesData();
+  }, []);
 
   return (
     <Grid container>
-    <Grid item xs={12}>
-      <div style={{ backgroundColor: "#fff" }}>
-        <Navbar />
-        <Box height={30} />
-        <Box sx={{ display: "flex" }}>
-          <Sidenav />
-          <Grid item xs={12} sm={10} md={9} lg={8} xl={7} style={{ marginLeft: "auto", marginRight: "auto" }}>
+      <Grid item xs={12}>
+        <div style={{ backgroundColor: "#fff" }}>
+          <Navbar />
+          <Box height={30} />
+          <Box sx={{ display: "flex" }}>
+            <Sidenav />
+            <Grid item xs={12} sm={10} md={9} lg={8} xl={7} style={{ marginLeft: "auto", marginRight: "auto" }}>
               <Container maxWidth="md" sx={{ p: 2 }}>
                 <Typography variant="h5" fontWeight={'425'} gutterBottom textAlign={'left'}>
                   Enter Branch Details
                 </Typography>
-          <Tabs value={tabValue} onChange={handleTabChange} sx={{ marginBottom: 3 }}>
-          <Tab label="General Information" />
+                <Card sx={{ width: "750px", padding: "15px" }}>
+                  <Tabs value={tabValue} onChange={handleTabChange} aria-label="paym-branch-details-tabs">
+                    <Tab label="General Information" />
                     <Tab label="Address Details" />
                     <Tab label="Contact Details" />
                     <Tab label="Additional Info" />
-          </Tabs>
-          <Card sx={{ width: "750px", padding: "15px" }}>
-            <form onSubmit={handleSubmit}>
-              {tabValue === 0 && (
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth error={companyError}>
-                    {/* <InputLabel >Company ID</InputLabel> */}
-                      <select
-                        name="pnCompanyId"
-                        value={pnCompanyId}
-                        onChange={handleChange}
-                        required
-                        style={{ height: '50px' }}
-                        InputLabelProps={{
-                          shrink: true}}
-                      >
-                        <option value="" disabled>
-                          Select Company
-                        </option>
-                        {company.map((c) => (
-                          <option key={c.pnCompanyId} value={c.pnCompanyId}>
-                            {c.companyName}
-                          </option>
-                        ))}
-                      </select>
-                      {companyError && <FormHelperText>Company is required</FormHelperText>}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      name="branchCode"
-                      label="Branch Code"
-                      value={branchCode}
-                      onChange={handleChange}
-                      fullWidth
-                      error={branchCodeError}
-                      helperText={branchCodeError && 'Branch Code is required'}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <TextField
-                      name="branchName"
-                      label="Branch Name"
-                      value={branchName}
-                      onChange={handleChange}
-                      fullWidth
-                      error={branchNameError}
-                      helperText={branchNameError && 'Branch Name is required'}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-      <TextField
-        name="branchUserId"
-        label="Branch User ID"
-        value={branchUserId}
-        onChange={handleChange}
-        fullWidth
-        error={branchUserIdError}
-        helperText={branchUserIdError && 'Branch User ID is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="branchPassword"
-        label="Branch Password"
-        type="password"
-        value={branchPassword}
-        onChange={handleChange}
-        fullWidth
-        error={branchPasswordError}
-        helperText={branchPasswordError && 'Branch Password is required'}
-      />
-    </Grid>
+                  </Tabs>
+                  <form onSubmit={formik.handleSubmit}>
+                    {tabValue === 0 && (
+
+                      <Grid container spacing={2} sx={{ paddingTop: 2 }}>
+                 <Grid item xs={12} sm={4}>
+                  <FormControl fullWidth error={formik.touched.pnCompanyId && Boolean(formik.errors.pnCompanyId)}>
+                    <InputLabel shrink>Company</InputLabel>
+                    <Select
+                      name="pnCompanyId"
+                      value={formik.values.pnCompanyId}
+                      onChange={formik.handleChange}
+                      displayEmpty
+                      style={{ height: '40px' }}
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      {companies.map((e) => (
+                        <MenuItem key={e.pnCompanyId} value={e.pnCompanyId}>
+                          {e.companyName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {formik.touched.pnCompanyId && formik.errors.pnCompanyId && (
+                      <FormHelperText style={{ color: 'red' }}>
+                        {formik.errors.pnCompanyId}
+                      </FormHelperText>
+                    )}
+                  </FormControl>
                 </Grid>
-              )}
-            {tabValue === 1 && (
-  <Grid container spacing={3}>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="addressLine1"
-        label="Address Line 1"
-        value={addressLine1}
-        onChange={handleChange}
-        fullWidth
-        error={addressLine1Error}
-        helperText={addressLine1Error && 'Address Line 1 is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="addressLine2"
-        label="Address Line 2"
-        value={addressLine2}
-        onChange={handleChange}
-        fullWidth
-        error={addressLine2Error}
-        helperText={addressLine2Error && 'Address Line 2 is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-         name="city"
-         label="City"
-         value={city}
-         onChange={handleChange}
-         fullWidth
-         error={cityError}
-         helperText={cityError && 'City is required'}
-       
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="zipCode"
-        label="ZIP Code"
-        value={zipCode}
-        onChange={handleChange}
-        fullWidth
-        error={zipCodeError}
-        helperText={zipCodeError && 'ZIP Code is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-         name="country"
-         label="Country"
-         value={country}
-         onChange={handleChange}
-         fullWidth
-         error={countryError}
-         helperText={countryError && 'Country is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-         name="state"
-         label="State"
-         value={state}
-         onChange={handleChange}
-         fullWidth
-         error={stateError}
-         helperText={stateError && 'State is required'}
-      />
-    </Grid>
-  </Grid>
-)}
 
-{tabValue === 2 && (
-  <Grid container spacing={3}>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="phoneNo"
-        label="Phone Number"
-        value={phoneNo}
-        onChange={handleChange}
-        fullWidth
-        error={phoneNoError}
-        helperText={phoneNoError && 'Phone Number is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="faxNo"
-        label="Fax Number"
-        value={faxNo}
-        onChange={handleChange}
-        fullWidth
-        error={faxNoError}
-        helperText={faxNoError && 'Fax Number is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="emailId"
-        label="Email ID"
-        value={emailId}
-        onChange={handleChange}
-        fullWidth
-        error={emailIdError}
-        helperText={emailIdError && 'Valid Email ID is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="alternateEmailId"
-        label="Alternate Email ID"
-        value={alternateEmailId}
-        onChange={handleChange}
-        fullWidth
-        error={alternateEmailIdError}
-        helperText={alternateEmailIdError && 'Valid Alternate Email ID is required'}
-      />
-    </Grid>
-  
-  </Grid>
-)}
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Branch Code"
+                            name="branchCode"
+                            value={formik.values.branchCode}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.branchCode && Boolean(formik.errors.branchCode)}
+                            helperText={formik.touched.branchCode && formik.errors.branchCode}
 
-{tabValue === 3 && (
-  <Grid container spacing={3}>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="status"
-        label="Status"
-        value={status}
-        onChange={handleChange}
-        fullWidth
-        error={statusError}
-        helperText={statusError && 'Status is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="pfno"
-        label="PF Number"
-        value={pfno}
-        onChange={handleChange}
-        fullWidth
-        error={pfnoError}
-        helperText={pfnoError && 'PF Number is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="esino"
-        label="ESI Number"
-        value={esino}
-        onChange={handleChange}
-        fullWidth
-        error={esinoError}
-        helperText={esinoError && 'Valid ESI Number is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="startDate"
-        label="Start Date"
-        type="date"
-        value={startDate}
-        onChange={handleChange}
-        fullWidth
-        InputLabelProps={{
-          shrink: true,
-        }}
-        error={startDateError}
-        helperText={startDateError && 'Start Date is required'}
-      />
-    </Grid>
-    <Grid item xs={12} sm={4}>
-      <TextField
-        name="endDate"
-        label="End Date"
-        type="date"
-        value={endDate}
-        onChange={handleChange}
-        fullWidth
-        InputLabelProps={{
-          shrink: true,
-        }}
-        error={endDateError}
-        helperText={endDateError && 'End Date is required'}
-      />
-    </Grid>
-  </Grid>
-)}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Branch Name"
+                            name="branchName"
+                            value={formik.values.branchName}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.branchName && Boolean(formik.errors.branchName)}
+                            helperText={formik.touched.branchName && formik.errors.branchName}
 
-              <Box sx={{ marginTop: 3, display: 'flex', justifyContent: 'flex-end' }}>
-                <Button variant="contained" type="submit">
-                  Submit
-                </Button>
-              </Box>
-            </form>
-          </Card>
-       </Container>
-       </Grid>
-       </Box>
-       </div>
-       </Grid>
-       </Grid>
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Branch User Id"
+                            name="branchUserId"
+                            autoComplete="off"
+                            value={formik.values.branchUserId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.branchUserId && Boolean(formik.errors.branchUserId)}
+                            helperText={formik.touched.branchUserId && formik.errors.branchUserId}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                        <TextField
+    fullWidth
+    size="small"
+    label="Branch Password"
+    name="branchPassword"
+    type="password"
+    autoComplete="new-password"
+    value={formik.values.branchPassword}
+    onChange={formik.handleChange}
+    onBlur={formik.handleBlur}
+    error={formik.touched.branchPassword && Boolean(formik.errors.branchPassword)}
+    helperText={formik.touched.branchPassword && formik.errors.branchPassword}
+    InputLabelProps={{ shrink: true }}
+  />
+                        </Grid>
+
+                      </Grid>
+
+                    )}
+
+                    {tabValue === 1 && (
+
+                      <Grid container spacing={2} sx={{ paddingTop: 2 }}>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Address Line 1"
+                            name="addressLine1"
+                            value={formik.values.addressLine1}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
+                            helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Address Line 2"
+                            name="addressLine2"
+                            value={formik.values.addressLine2}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
+                            helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Zip Code"
+                            name="zipCode"
+                            value={formik.values.zipCode}
+                            onChange={handleChange}
+                            onKeyDown={handleKeyDown}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.zipCode && Boolean(formik.errors.zipCode)}
+                            helperText={formik.touched.zipCode && formik.errors.zipCode}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="City"
+                            name="city"
+                            value={formik.values.city}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.city && Boolean(formik.errors.city)}
+                            helperText={formik.touched.city && formik.errors.city}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="State"
+                            name="state"
+                            value={formik.values.state}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.state && Boolean(formik.errors.state)}
+                            helperText={formik.touched.state && formik.errors.state}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Country"
+                            name="country"
+                            value={formik.values.country}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.country && Boolean(formik.errors.country)}
+                            helperText={formik.touched.country && formik.errors.country}
+
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+
+                      </Grid>
+
+                    )}
+
+                    {tabValue === 2 && (
+
+                      <Grid container spacing={2} sx={{ paddingTop: 2 }}>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Phone No"
+                            name="phoneNo"  // Add this line
+                            value={formik.values.phoneNo}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.phoneNo && Boolean(formik.errors.phoneNo)}
+                            helperText={formik.touched.phoneNo && formik.errors.phoneNo}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Fax No"
+                            name="faxNo"
+                            value={formik.values.faxNo}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.faxNo && Boolean(formik.errors.faxNo)}
+                            helperText={formik.touched.faxNo && formik.errors.faxNo}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="PF No"
+                            name="pfno"
+                            value={formik.values.pfno}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.pfno && Boolean(formik.errors.pfno)}
+                            helperText={formik.touched.pfno && formik.errors.pfno}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="ESI No"
+                            name="esino"
+                            value={formik.values.esino}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.esino && Boolean(formik.errors.esino)}
+                            helperText={formik.touched.esino && formik.errors.esino}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Email Id"
+                            name="emailId"
+                            value={formik.values.emailId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.emailId && Boolean(formik.errors.emailId)}
+                            helperText={formik.touched.emailId && formik.errors.emailId}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Alternate Email Id"
+                            name="alternateEmailId"
+                            value={formik.values.alternateEmailId}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.alternateEmailId && Boolean(formik.errors.alternateEmailId)}
+                            helperText={formik.touched.alternateEmailId && formik.errors.alternateEmailId}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                      </Grid>
+
+                    )}
+
+                    {tabValue === 3 && (
+
+                      <Grid container spacing={2} sx={{ paddingTop: 2 }}>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Status"
+                            name="status"
+                            value={formik.values.status}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.status && Boolean(formik.errors.status)}
+                            helperText={formik.touched.status && formik.errors.status}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="Start Date"
+                            name="startDate"
+                            type="date"
+                            value={formik.values.startDate}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.startDate && Boolean(formik.errors.startDate)}
+                            helperText={formik.touched.startDate && formik.errors.startDate}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={4}>
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label="End Date"
+                            name="endDate"
+                            type="date"
+                            value={formik.values.endDate}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            error={formik.touched.endDate && Boolean(formik.errors.endDate)}
+                            helperText={formik.touched.endDate && formik.errors.endDate}
+
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                      </Grid>
+
+                    )}
+
+                    <Box mt={3}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} style={{ textAlign: 'right' }}>
+                          <Box display="flex" justifyContent="flex-end">
+                            <Button variant="contained" color="secondary" onClick={handleCancel} style={{ marginRight: '8px' }}>
+                              Cancel
+                            </Button>
+                            <Button variant="contained" color="primary" onClick={handleNext}>
+                              {tabValue === 3 ? 'Submit' : 'Next'}
+                            </Button>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </form>
+                  <Popover
+                    open={popoverOpen}
+                    anchorEl={popoverAnchorEl}
+                    onClose={() => setPopoverOpen(false)}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'center',
+                    }}
+                  >
+                    <Typography sx={{ p: 2 }}>{popoverMessage}</Typography>
+                  </Popover>
+                </Card>
+              </Container>
+            </Grid>
+          </Box>
+        </div>
+      </Grid>
+    </Grid>
   );
-}
+};
+export default PayBranchForm01;

@@ -84,7 +84,7 @@ import EmployeeWorkDetailsForm from "./components/PaymEmployeeWorkDetails/paymEm
 import PaymEncashmentDetailsTables from "./components/PaymEncashmentDetails/paymEncashmentDetailsTable";
 import EncashmentDetailsForm from "./components/PaymEncashmentDetails/paymEncashmentDetailsForm";
 import PaymgradeTables from "./components/PaymGrade/PaymGradeTables";
-import GradeForm from "./components/PaymGrade/paymGradeForm";
+// import GradeForm from "./components/PaymGrade/paymGradeForm";
 import PaymHolidayTables from "./components/PaymHolidays/PaymHolidaysTables";
 import HolidayForm from "./components/PaymHolidays/paymHolidaysForm";
 import PaymleaveTables from "./components/PaymLeave/paymleaveTable";
@@ -178,10 +178,10 @@ import PayslipNewFormat from "./components/PayslipNew format/PayslipNewFormat";
 import PayslipGenerator from "./components/PayslipNew format/payslipgenerator";
 import OldPayslipGenerator from "./components/PayslipNew format/OldPayslipGenerator";
 import OldPayslip from "./components/PayslipNew format/Oldpayslip";
-import Medical from "./components/Medical/Medical";
-import MedicalSlipGenerator from "./components/Medical/MedicalSlipGenerator";
-import MedicalSlipView from "./components/Medical/MedicalSlipView";
-import ViewMedical from "./components/Medical/ViewMedical";
+// import Medical from "./components/Medical/Medical";
+// import MedicalSlipGenerator from "./components/Medical/MedicalSlipGenerator";
+// import MedicalSlipView from "./components/Medical/MedicalSlipView";
+// import ViewMedical from "./components/Medical/ViewMedical";
 import EarlyAndLate from "./components/Early and Late entries/Earlyandlateentriesform";
 import Payslipelegant from "./components/PayslipNew format/Payslipelegant";
 import Payslipmonthly from "./components/PayslipNew format/Payslipmonthly";
@@ -195,20 +195,20 @@ import Shiftpatterns0009 from "./components/masterrols/emshiftpatern";
 import LeaveSetup from "./components/masterrols/leavesetup";
 import Leavesettlement from "./components/masterrols/Leavesettlement";
 import HomePage from "./components/Home Page/HomePage";
-import MastersTemplate from "./components/Masters/MastersTemplate";
-import CompanyForm01 from "./components/Masters/CompanyMasters"
-import PayBranchForm01 from "./components/Masters/BranchMaster";
-import PaymEmployeeMasters from "./components/Masters/EmployeeMasters"
-import DepartmentMasters from "./components/paymDepartment/paymDepartmentForm";
-import DesignationMasters from "./components/Masters/DesignationMasters";
-import ShiftMasters from "./components/Masters/ShiftMasters";
-import EarnDeductMasters from "./components/Masters/EarnDeductMasters";
+// import MastersTemplate from "./components/Masters/MastersTemplate";
+// import CompanyForm01 from "./components/Masters/CompanyMasters"
+// import PayBranchForm01 from "./components/Masters/BranchMaster";
+// import PaymEmployeeMasters from "./components/Masters/EmployeeMasters"
+// import DepartmentMasters from "./components/paymDepartment/paymDepartmentForm";
+// import DesignationMasters from "./components/Masters/DesignationMasters";
+// import ShiftMasters from "./components/Masters/ShiftMasters";
+// import EarnDeductMasters from "./components/Masters/EarnDeductMasters";
 import SlabTemplate from "./components/SlabsTemplate/SlabTemplate";
-import Departmensmasters from "./components/Masters/DepartmentMasters";
+// import Departmensmasters from "./components/Masters/DepartmentMasters";
 import LeaveApplyRequestHigher from "./components/Home Page/LeaveRequestshigher";
 import LeaveRequestManager from "./components/Home Page/LeaveRequestManager";
 import LeaveRequestEmployee from "./components/Home Page/LeaveRequestEmployee";
-import CompanyMasters from "./components/Masters/CompanyMasters";
+// import CompanyMasters from "./components/Masters/CompanyMasters";
 // import AttendanceHome from "./components/Home Page/Attendance";
 
 import SpreadGrid1 from "./components/SpreadGrid";
@@ -216,33 +216,53 @@ import MySpreadGrid from "./components/SpreadGrid";
 import GraphCheckBox1 from "./components/Home Page/dashboard/Checkbox";
 import DBoard from "./components/Home Page/dashboard/DBoard";
 import DBoards from "./components/Home Page/dashboard/DBoard";
-import DepartmentMasters01 from "./components/Masters/DepartmentMasters";
-import LevelForm33 from "./components/Masters/LevelMaster";
-import CategoryFormMaster from "./components/Masters/CategoryMater";
-import DivisionMaster from "./components/Masters/Division";
-import GradeForm001 from "./components/Masters/Grade";
-import JobStatusForm220 from "./components/Masters/Jobstatus";
-import EmployeeHome220 from "./components/Masters/employeeMaster";
-import DetailsForm220 from "./components/Masters/ShiftDetailsMaster";
-import PaymEmployeeForm001 from "./components/Masters/EmployeeMasters";
+// import DepartmentMasters01 from "./components/Masters/DepartmentMasters";
+// import LevelForm33 from "./components/Masters/LevelMaster";
+// import CategoryFormMaster from "./components/Masters/CategoryMater";
+// import DivisionMaster from "./components/Masters/Division";
+// import GradeForm001 from "./components/Masters/Grade";
+// import JobStatusForm220 from "./components/Masters/Jobstatus";
+// import EmployeeHome220 from "./components/Masters/employeeMaster";
+// import DetailsForm220 from "./components/Masters/ShiftDetailsMaster";
+// import PaymEmployeeForm001 from "./components/Masters/EmployeeMasters";
 // import BasicTable from "./components/Home Page/Attendance";
-import HolidaysPage from "./components/Masters/Holiday)1";
-import HolidayForm2 from "./components/Masters/Holiday2";
-import Paymshift0990 from "./components/Masters/ShiftDetailsMaster";
-import EmployeeProfile1Form001 from "./components/Masters/EpmProfile";
-import EmployeeProfile1Form0009 from "./components/Masters/EpmProfile";
-import Employeeprofile0909090 from "./components/Masters/EmployeeMasters";
-import PaymEmployeeForm0045 from "./components/Masters/EpmProfile";
+// import HolidaysPage from "./components/Masters/Holiday)1";
+// import HolidayForm2 from "./components/Masters/Holiday2";
+// import Paymshift0990 from "./components/Masters/ShiftDetailsMaster";
+// import EmployeeProfile1Form001 from "./components/Masters/EpmProfile";
+// import EmployeeProfile1Form0009 from "./components/Masters/EpmProfile";
+// import Employeeprofile0909090 from "./components/Masters/EmployeeMasters";
+// import PaymEmployeeForm0045 from "./components/Masters/EpmProfile";
 import Dashboard0909 from "./components/Home Page/dashboard/DBoard";
 import Dashboard from "./components/Home Page/dashboard/DBoard";
 import Attendancewise1 from "./components/Home Page/Attendance1";
-import ShiftForm from "./components/Masters/ShiftDetailsMaster";
+import PayBranchForm01 from "./components/Masters/BranchMaster";
+import CategoryFormMaster from "./components/Masters/CategoryMater";
+import DepartmentFormMaster from "./components/Masters/DepartmentMasters";
+import DesignationMasters from "./components/Masters/DesignationMasters";
+import DivisionMaster from "./components/Masters/Division";
+import EarnDeductMasters from "./components/Masters/EarnDeductMasters";
+import EmployeeHome220 from "./components/Masters/employeeMaster";
+import Employeeprofile0909090 from "./components/Masters/EmployeeMasters";
+import PaymEmployeeForm0045 from "./components/Masters/EpmProfile";
+import GradeForm001 from "./components/Masters/Grade";
+import CompanyMasterss from "./components/Masters/CompanyMasters";
+import LevelFormMaster from "./components/Masters/LevelMaster";
+import ShiftFormMaster from "./components/Masters/ShiftDetailsMaster";
+import MastersTemplate from "./components/Masters/MastersTemplate";
 import PaymLeaveMaster from "./components/Masters/PaymLeaveMaster";
-
+import JobStatusFormMaster from "./components/Masters/Jobstatus";
+// import ShiftForm from "./components/Masters/ShiftDetailsMaster";
+// import PaymLeaveMaster from "./components/Masters/PaymLeaveMaster";
+import { LightThemeConfig } from "./components/Home Page/Theme";
+import { CssBaseline } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
 
 const store = createStore(entityReducer);
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
+  <ThemeProvider theme={LightThemeConfig}>
+       <CssBaseline />
   <Provider store={store}>
     <BrowserRouter>
       {/* <br></br>
@@ -255,14 +275,14 @@ root.render(
         <Route path="/" element={<App />}>
           <Route path="/loginemployee" element={<LoginOthers />} />
           <Route path="/HomePage" element={<HomePage/>}></Route>
-          <Route path="/Masters" element={<MastersTemplate />} />
-          <Route path="/CompanyForm01" element={<CompanyMasters/>}/>
-          <Route path="/PayBranchForm01" element={<PayBranchForm01/>}/>
-          <Route path="/DepartmentMasters01" element={<DepartmentMasters01  />}/>
+          {/* <Route path="/Masters" element={<MastersTemplate />} /> */}
+          {/* <Route path="/CompanyForm01" element={<CompanyMasters/>}/> */}
+          {/* <Route path="/PayBranchForm01" element={<PayBranchForm01/>}/> */}
+          {/* <Route path="/DepartmentMasters01" element={<DepartmentMasters01  />}/> */}
           <Route path="/DesignationForm" element={<DesignationForm/>}/>
-          <Route path="/Paymshift0990" element={<ShiftForm/>}/>
-          <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/>
-          <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/>
+          {/* <Route path="/Paymshift0990" element={<ShiftForm/>}/> */}
+          {/* <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/>
+          <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/> */}
           <Route path="/Group" element={<GroupUi/>}/>
           <Route path="/Group/addinfos" element={<AddInfos/>}/>
           <Route path="/EmployeeShift" element={<GroupShift/>}/>
@@ -275,32 +295,48 @@ root.render(
           <Route path="/EarnDeductTable" element={<EarnDeductTable />}></Route>
           <Route path="/PaymBranchtable" element={<PaymBranchtable />}></Route>
           <Route path="/SpreadGrid" element={<MySpreadGrid/>}></Route>
-          <Route path="/CompanyMasters" element={<CompanyMasters/>}></Route>
-          <Route path="/PaymEmployeeMasters" element={<PaymEmployeeMasters/>}></Route>
-        <Route path="/LevelForm33" element={<LevelForm33/>}></Route>
-        <Route path="/CategoryFormMaster" element={<CategoryFormMaster/>}></Route>
-        <Route path="/DesignationMasters" element={<DesignationMasters/>}></Route>
-        <Route path="/DivisionMaster" element={<DivisionMaster/>}></Route>
+          <Route path="/PaymLeaveMaster" element={<PaymLeaveMaster/>}></Route>
+          <Route path="/JobStatusFormMaster" element={<JobStatusFormMaster/>}></Route>
+          {/* <Route path="/CompanyMasters" element={<CompanyMasters/>}></Route> */}
+          {/* <Route path="/PaymEmployeeMasters" element={<PaymEmployeeMasters/>}></Route> */}
+        {/* <Route path="/LevelForm33" element={<LevelForm33/>}></Route> */}
+        {/* <Route path="/CategoryFormMaster" element={<CategoryFormMaster/>}></Route> */}
+        {/* <Route path="/DesignationMasters" element={<DesignationMasters/>}></Route> */}
+        {/* <Route path="/DivisionMaster" element={<DivisionMaster/>}></Route> */}
         
         <Route path="/DBoards" element={<Dashboard />} />
         <Route path="/GraphCheckBox1" element={<GraphCheckBox1/>}> </Route>
         
-         <Route path="/GradeForm001" element={<GradeForm001/>}></Route>
-       <Route path="/JobStatusForm220" element={<JobStatusForm220/>}></Route>
+         {/* <Route path="/GradeForm001" element={<GradeForm001/>}></Route> */}
+       {/* <Route path="/JobStatusForm220" element={<JobStatusForm220/>}></Route>
     <Route path="/EmployeeHome220" element={<EmployeeHome220/>}></Route>
     <Route path="/DetailsForm220" element={<DetailsForm220/>}></Route>
-<Route path='/PaymEmployeeForm001' element={<PaymEmployeeForm001/>}></Route>
+<Route path='/PaymEmployeeForm001' element={<PaymEmployeeForm001/>}></Route> */}
 {/* <Route path="/BasicTable" element={<BasicTable/>}></Route> */}
-   <Route path="/HolidaysPage" element={<HolidaysPage/>}></Route> 
-   <Route path="/HolidayForm2" element={<HolidayForm2/>}></Route>   
-   <Route path="/Paymshift0990" element={<Paymshift0990/>}></Route> 
-   <Route path="/EmployeeProfile1Form001"element={<EmployeeProfile1Form001/>}></Route>
-   <Route path="/Employeeprofile0909090" element={<Employeeprofile0909090/>}></Route>
+   {/* <Route path="/HolidaysPage" element={<HolidaysPage/>}></Route> 
+   <Route path="/HolidayForm2" element={<HolidayForm2/>}></Route>    */}
+   {/* <Route path="/Paymshift0990" element={<Paymshift0990/>}></Route>  */}
+   {/* <Route path="/EmployeeProfile1Form001"element={<EmployeeProfile1Form001/>}></Route> */}
+   {/* <Route path="/Employeeprofile0909090" element={<Employeeprofile0909090/>}></Route> */}
    <Route path="/EmployeeProfile1Form" element={<EmployeeProfile1Form/>}></Route>
-   <Route path="/PaymEmployeeForm0045" element={<PaymEmployeeForm0045/>}></Route>
+   {/* <Route path="/PaymEmployeeForm0045" element={<PaymEmployeeForm0045/>}></Route> */}
    {/* <Route path="/BasicDateCalendar" element={<BasicDateCalendar/>}></Route> */}
    <Route path="/Attendancewise1" element={<Attendancewise1/>}></Route>
-   <Route path="/PaymLeaveMaster" element={<PaymLeaveMaster/>}></Route>
+   <Route path="/PayBranchForm01" element={<PayBranchForm01/>}></Route>
+   <Route path="/CategoryFormMaster" element={<CategoryFormMaster/>}></Route>
+   <Route path="/CompanyMasterss" element={<CompanyMasterss/>}></Route>
+   <Route path="/DepartmentFormMaster" element={<DepartmentFormMaster/>}></Route>
+   <Route path="/DesignationMasters" element={<DesignationMasters/>}/>
+   <Route path="/DivisionMaster" element={<DivisionMaster/>}/>
+   <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/>
+   <Route path="/EmployeeHome220" element={<EmployeeHome220/>}/>
+   <Route path="/Employeeprofile0909090" element={<Employeeprofile0909090/>}/>
+   <Route path="/PaymEmployeeForm0045" element={<PaymEmployeeForm0045/>}/>
+   <Route path="/GradeForm001" element={<GradeForm001/>}/>
+   <Route path="/LevelFormMaster" element={<LevelFormMaster/>}/>
+   <Route path="/ShiftFormMaster" element={<ShiftFormMaster/>}/>
+   <Route path="/MastersTemplate" element={<MastersTemplate/>}/>
+   {/* <Route path="/PaymLeaveMaster" element={<PaymLeaveMaster/>}></Route> */}
           {/* <Route path="/layout" element={<Layoutcomp />} />
           <Route path="/att" element={<BasicDateCalendar />} />
           <Route path="/home" element={<ServiceCard />}></Route>
@@ -688,6 +724,7 @@ root.render(
       </Routes>
     </BrowserRouter>
   </Provider>
+  </ThemeProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
