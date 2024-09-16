@@ -8,66 +8,31 @@ import {
   FormControl,
   MenuItem,
   Select,
-  FormHelperText,
+  FormHelperText,Box,Container,
   CardContent,
 } from '@mui/material';
 import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
 import { useNavigate } from 'react-router-dom';
-import { PAYMCOMPANIES, PAYMBRANCHES, SAVE ,REPORTS} from '../../serverconfiguration/controllers';
-
+import { PAYMCOMPANIES, PAYMBRANCHES, SAVE, REPORTS } from '../../serverconfiguration/controllers';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import Navbar from "../Home Page/Navbar";
+import Sidenav from "../Home Page/Sidenav";
 export default function CategoryFormMaster() {
   const navigate = useNavigate();
-
   const [company, setCompany] = useState([]);
   const [branch, setBranch] = useState([]);
-  const [filteredBranches, setFilteredBranches] = useState([]);
-
   const [pnCompanyId, setPnCompanyId] = useState('');
   const [pnBranchId, setPnBranchId] = useState('');
-  const [vCategoryName, setVCategoryName] = useState('');
-  const [status, setStatus] = useState('');
-  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
-
-  const [companyError, setCompanyError] = useState(false);
-  const [branchError, setBranchError] = useState(false);
-  const [categoryNameError, setCategoryNameError] = useState(false);
-  const [statusError, setStatusError] = useState(false);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     try {
-  //       const companyData = await getRequest(ServerConfig.url, PAYMCOMPANIES);
-  //       setCompanies(companyData.data);
-
-  //       const branchData = await getRequest(ServerConfig.url, PAYMBRANCHES);
-  //       setBranches(branchData.data);
-  //       setFilteredBranches(branchData.data); // Initialize with all branches
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   }
-
-  //   fetchData();
-  // }, []);
-
-  // useEffect(() => {
-  //   if (pnCompanyId) {
-  //     const filtered = branches.filter(branch => branch.pnCompanyId === pnCompanyId);
-  //     setFilteredBranches(filtered);
-  //     setPnBranchId(''); // Reset branch selection
-  //   } else {
-  //     setFilteredBranches(branches); // Show all branches if no company is selected
-  //   }
-  // }, [pnCompanyId, branches]);
+  const [isloggedin, setIsloggedin] = useState(sessionStorage.getItem('user'));
 
   useEffect(() => {
     async function getData() {
       try {
         const companyData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+          query: `select * from paym_Company where company_user_id = '${isloggedin}'`,
         });
-        console.log(companyData.data);
         setCompany(companyData.data);
         if (companyData.data.length > 0) {
           setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
@@ -77,81 +42,45 @@ export default function CategoryFormMaster() {
       }
     }
     getData();
-  }, []);
+  }, [isloggedin]);
 
   useEffect(() => {
     async function getData() {
       try {
-        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
+        const branchData = await postRequest(ServerConfig.url, REPORTS, {
+          query:` select * from paym_branch where pn_CompanyID = '${pnCompanyId}'`,
         });
-        console.log("Branch data", BranchData.data)
-        setBranch(BranchData.data);
-       
+        setBranch(branchData.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     }
-    getData();
-    console.log("Branch", branch)
-  }, [company]);
-
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    switch (name) {
-      case 'pnCompanyId':
-        setPnCompanyId(value);
-        setCompanyError(false);
-        break;
-      case 'pnBranchId':
-        setPnBranchId(value);
-        setBranchError(false);
-        break;
-      case 'vCategoryName':
-        setVCategoryName(value);
-        setCategoryNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(value));
-        break;
-      case 'status':
-        setStatus(value.toUpperCase());
-        setStatusError(!/^[A-Za-z0-9]$/.test(value));
-        break;
-      default:
-        break;
+    if (pnCompanyId) {
+      getData();
     }
-  };
+  }, [pnCompanyId]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const validationSchema = Yup.object({
+    pnCompanyId: Yup.string().required('Please select a Company ID'),
+    pnBranchId: Yup.string().required('Please select a Branch ID'),
+    vCategoryName: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,40}$/, 'Category Name must be alphanumeric and up to 40 characters')
+      .required('Category Name is required'),
+    status: Yup.string()
+      .matches(/^[A-Za-z0-9]$/, 'Status must be a single alphanumeric character')
+      .required('Status is required'),
+  });
 
-    const hasError = !pnCompanyId || !pnBranchId || !/^[A-Za-z0-9\s]{1,40}$/.test(vCategoryName) ||
-                     !/^[A-Za-z0-9]$/.test(status);
-
-    setCompanyError(!pnCompanyId);
-    setBranchError(!pnBranchId);
-    setCategoryNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(vCategoryName));
-    setStatusError(!/^[A-Za-z0-9]$/.test(status));
-
-    if (hasError) {
-      return;
-    }
-
-    const formData = {
-      pnCompanyId,
-      pnBranchId,
-      vCategoryName,
-      status,
-    };
-
+  const handleSubmit = async (values, { resetForm }) => {
     try {
       const response = await postRequest(ServerConfig.url, SAVE, {
-        query: `INSERT INTO [dbo].[paym_Category]([pn_CompanyID],[BranchID],[v_CategoryName],[status]) VALUES ('${pnCompanyId}', '${pnBranchId}', '${vCategoryName}', '${status}')`
+        query:` INSERT INTO [dbo].[paym_Category]([pn_CompanyID],[BranchID],[v_CategoryName],[status]) VALUES ('${values.pnCompanyId}', '${values.pnBranchId}', '${values.vCategoryName}', '${values.status}')`,
       });
 
       if (response.status === 200) {
         alert('Data saved successfully');
-        navigate('/JobStatusFormMaster'); // Redirect to a different route or handle as needed
+        resetForm(); // Reset the form after successful submission
+        navigate('/JobStatusFormMaster');
       } else {
         alert('Failed to save data');
       }
@@ -161,107 +90,165 @@ export default function CategoryFormMaster() {
     }
   };
 
+  const handleCancel = (resetForm) => {
+    resetForm(); // Reset the form on cancel
+  };
+
   return (
+    <Grid container>
+    <Grid item xs={12}>
+      <div style={{ backgroundColor: "#fff" }}>
+        <Navbar />
+        <Box height={30} />
+        <Box sx={{ display: "flex" }}>
+          <Sidenav />
+          <Grid item xs={12} sm={10} md={9} lg={8} xl={7} style={{ marginLeft: "auto", marginRight: "auto" }}>
+            <Container maxWidth="md" sx={{ p: 2 }}>
     <div>
       <Grid style={{ padding: '80px 5px 0 5px' }}>
-        <Card style={{ maxWidth: 600, margin: '0 auto' }}>
-          <CardContent>
-            <Typography variant="h5" color="textPrimary" align="center">
-              Category Form
+    <Card style={{ maxWidth: 600, margin: '0 auto' }}>
+      <CardContent>
+        <Typography variant="h5" gutterBottom color="textPrimary" align="center">
+              Category
             </Typography>
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={companyError}>
-                <TextField
-  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
-  variant="outlined"
-  fullWidth
-  InputProps={{ readOnly: true }}
-/>
-
-                  {companyError && (
-                    <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a CompanyID
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={branchError}>
-                  <Select
-                    value={pnBranchId}
-                    onChange={handleChange}
-                    name="pnBranchId"
-                    displayEmpty
-                    sx={{ height: '50px' }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select a BranchID
-                    </MenuItem>
-                    {branch.map((e) => (
-                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
-                        {e.BranchName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {branchError && (
-                    <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a BranchID
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={categoryNameError}>
-                    <TextField
-                      name="vCategoryName"
-                      label="Category Name"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={vCategoryName}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    {categoryNameError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Category Name (alphanumeric characters, max length 40)
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={statusError}>
-                    <TextField
-                      name="status"
-                      label="Status"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={status}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    {statusError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Status (alphanumeric character)
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid container spacing={1} paddingTop={'10px'}>
-                  <Grid item xs={12} align="right">
-                    <Button style={{ margin: '0 5px' }} type="submit" variant="contained" color="primary">
-                      SAVE
-                    </Button>
+            <Formik
+              initialValues={{
+                pnCompanyId: pnCompanyId || '',
+                pnBranchId: pnBranchId || '',
+                vCategoryName: '',
+                status: '',
+              }}
+              validationSchema={validationSchema}
+              onSubmit={(values, { resetForm }) => handleSubmit(values, { resetForm })}
+              enableReinitialize
+            >
+              {({ values, handleChange, handleBlur, errors, touched, resetForm }) => (
+                <Form>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={touched.pnCompanyId && Boolean(errors.pnCompanyId)}>
+                        <TextField
+                          value={company.find((c) => c.pn_CompanyID === values.pnCompanyId)?.CompanyName || ''}
+                          variant="outlined"
+                          fullWidth
+                          InputProps={{ readOnly: true }}
+                        />
+                        {touched.pnCompanyId && errors.pnCompanyId && (
+                          <FormHelperText sx={{ color: 'error.main' }}>
+                            {errors.pnCompanyId}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={touched.pnBranchId && Boolean(errors.pnBranchId)}>
+                        <Select
+                          value={values.pnBranchId}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          name="pnBranchId"
+                          displayEmpty
+                         
+                        >
+                          <MenuItem value="" disabled>
+                            Branch Name
+                          </MenuItem>
+                          {branch.map((b) => (
+                            <MenuItem key={b.pn_BranchID} value={b.pn_BranchID}>
+                              {b.BranchName}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {touched.pnBranchId && errors.pnBranchId && (
+                          <FormHelperText sx={{ color: 'error.main' }}>
+                            {errors.pnBranchId}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={touched.vCategoryName && Boolean(errors.vCategoryName)}>
+                        <TextField
+                          name="vCategoryName"
+                          label={
+                            <span>
+                              Category Name
+                              <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                            </span>
+                          }
+                          variant="outlined"
+                          fullWidth
+                          value={values.vCategoryName}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        {touched.vCategoryName && errors.vCategoryName && (
+                          <FormHelperText sx={{ color: 'error.main' }}>
+                            {errors.vCategoryName}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth error={touched.status && Boolean(errors.status)}>
+                        <TextField
+                          name="status"
+                          label={
+                            <span>
+                              Status
+                              <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                            </span>
+                          }
+                          variant="outlined"
+                          fullWidth
+                          value={values.status}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          InputLabelProps={{ shrink: true }}
+                        />
+                        {touched.status && errors.status && (
+                          <FormHelperText sx={{ color: 'error.main' }}>
+                            {errors.status}
+                          </FormHelperText>
+                        )}
+                      </FormControl>
+                    </Grid>
+                    <Grid container spacing={1} paddingTop="20px">
+                      <Grid item xs={12} align="right">
+                        <Button
+                          style={{ margin: '0 5px' }}
+                          type="button"
+                          variant="contained"
+                          color="secondary"
+                          onClick={() => handleCancel(resetForm)} // Call handleCancel on click
+                        >
+                          CANCEL
+                        </Button>
+                        <Button
+                          style={{ margin: '0 5px' }}
+                          type="submit"
+                          variant="contained"
+                          color="primary"
+                        >
+                          SAVE
+                        </Button>
+                      </Grid>
+                    </Grid>
                   </Grid>
-                </Grid>
-              </Grid>
-            </form>
+                </Form>
+              )}
+            </Formik>
           </CardContent>
         </Card>
       </Grid>
     </div>
+    </Container>
+    </Grid>
+    </Box>
+    </div>
+    </Grid>
+    </Grid>
+
   );
 }

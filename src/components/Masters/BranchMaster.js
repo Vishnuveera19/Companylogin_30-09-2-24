@@ -9,7 +9,6 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import axios from 'axios';
 import Popover from '@mui/material/Popover';
-
 import { useNavigate } from "react-router-dom";
 
 const PayBranchForm01 = () => {
@@ -27,23 +26,24 @@ const navigate = useNavigate();
 
     branchName: yup
       .string()
-      .max(50, 'Company Name should be at most 50 characters')
-      .required('Company Name is required')
-      .matches(/^[a-zA-Z0-9\s]+$/, 'Company Name should contain only letters, numbers, and spaces'),
+      .max(50, 'Branch Name should be at most 50 characters')
+      .required('Branch Name is required')
+      .matches(/^[a-zA-Z0-9\s]+$/, 'Branch Name should contain only letters, numbers, and spaces'),
     branchCode: yup
       .string()
-      .max(20, 'Company Code should be at most 20 characters')
-      .required('Company Code is required')
-      .matches(/^[a-zA-Z0-9]+$/, 'Company Code should contain only letters and numbers'),
+      .max(20, 'Branch Code should be at most 20 characters')
+      .required('Branch Code is required')
+      .matches(/^[a-zA-Z0-9]+$/, 'Branch Code should contain only letters and numbers'),
     addressLine1: yup
       .string()
       .max(100, 'Address Line 1 should be at most 100 characters')
       .required('Address Line 1 is required')
-      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 1 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+      .matches(/^[a-zA-Z0-9\s,/-]+$/, 'Address Line 1 should contain only letters, numbers, commas and hyphens'),
     addressLine2: yup
       .string()
       .max(100, 'Address Line 2 should be at most 100 characters')
-      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 2 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+      .required('Address Line 2 is required')
+      .matches(/^[a-zA-Z0-9\s,/-]+$/, 'Address Line 2 should contain only letters, numbers,commas and hyphens'),
     city: yup
       .string()
       .max(50, 'City should be at most 50 characters')
@@ -76,15 +76,15 @@ const navigate = useNavigate();
       .matches(/^\d{10}$/, 'Fax Number should be 10 digits'),
     emailId: yup
       .string()
-      .matches(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/, 'Email must contain only one "@" symbol and be alphanumeric')
+      .email('Enter a valid email')
       .max(100, 'Email Address should be at most 100 characters')
       .required('Email Address is required'),
 
     alternateEmailId: yup
       .string()
-      .matches(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$/, 'Email must contain only one "@" symbol and be alphanumeric')
-      .max(100, 'Alternate Email Address should be at most 100 characters')
-      .required('Alternate Email Address is required'),
+      .email('Enter a valid email')
+            .max(100, 'Alternate Email Address should be at most 100 characters'),
+      
     branchUserId: yup
       .string()
       .matches(/^[a-zA-Z0-9_]+$/, 'Branch User ID can only contain letters, numbers, and underscores')
@@ -93,7 +93,7 @@ const navigate = useNavigate();
 
       branchPassword: yup
       .string()
-      .required('Password is required')
+      .required('Branch Password is required')
       .matches(/^[a-zA-Z0-9]{1,10}$/, 'Password Number should be alphanumeric and at most 20 characters'),
  
     pfno: yup
@@ -145,28 +145,32 @@ const navigate = useNavigate();
     validationSchema: validationSchema,
     onSubmit: (values) => {
       console.log(values);
+      postData(values);
     },
   });
 
   const handleTabChange = (event, newValue) => {
     if (newValue > tabValue) {
       if (!isValid()) {
-        alert('Please fill all required fields before moving to the next step.');
+        const errorMessage = 'Please fill all required fields before moving to the next step.';
+        const anchorEl = event.target;
+        setPopoverOpen(true);
+        setPopoverAnchorEl(anchorEl);
+        setPopoverMessage(errorMessage);
         return;
       }
     }
     setTabValue(newValue);
   };
-
   const fetchLocationDetails = async (zipcode) => {
     try {
-      const response = await axios.get`(https://api.postalpincode.in/pincode/${zipcode})`;
-      const data = response.data[0];
-      if (data.Status === 'Success') {
-        const locationData = data.PostOffice[0];
-        formik.setFieldValue('city', locationData.District);
-        formik.setFieldValue('state', locationData.State);
-        formik.setFieldValue('country', locationData.Country);
+      const response = await axios.get(`https://api.postalpincode.in/pincode/${zipcode}`);
+      const data = response.data;
+      if (data.length > 0 && data[0].Status === 'Success') {
+        const locationData = data[0];
+        formik.setFieldValue('city', locationData.PostOffice[0].District);
+        formik.setFieldValue('state', locationData.PostOffice[0].State);
+        formik.setFieldValue('country', 'India'); // Assuming the country is always India
       } else {
         alert('Invalid Zip Code');
       }
@@ -174,43 +178,47 @@ const navigate = useNavigate();
       console.error('Error fetching location details:', error);
     }
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     formik.handleChange(e);
-
-    if (name === 'zipCode') {
+  
+    if (name === 'ZipCode') {
       if (value.length === 6) {
         fetchLocationDetails(value);
+      } else {
+        formik.setFieldValue('city', '');
+        formik.setFieldValue('state', '');
+        formik.setFieldValue('country', '');
       }
     }
   };
-
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && formik.values.zipCode.length === 6) {
-      fetchLocationDetails(formik.values.zipCode);
+    if (e.key === 'Enter' && formik.values.ZipCode && formik.values.ZipCode.length === 6) {
+      fetchLocationDetails(formik.values.ZipCode);
     }
   };
-
-
+  
   const isValid = () => {
     const errors = formik.errors;
     if (tabValue === 0) {
-      return !errors.branchCode && !errors.branchName && !errors.branchUserId && !errors.branchPassword;
+      return !errors.companyName && !errors.companyCode && !errors.companyUserId && !errors.companyPassword;;
     } else if (tabValue === 1) {
-      return !errors.addressLine1 && !errors.addressLine2 && !errors.city && !errors.state && !errors.country && !errors.zipCode;
+      return !errors.addressLine1 && !errors.city && !errors.state && !errors.country && !errors.ZipCode;
     } else if (tabValue === 2) {
-      return !errors.phoneNo && !errors.emailId && !errors.alternateEmailId && !errors.pfno && !errors.esino;
+      return !errors.phoneNumber && !errors.emailAddress;
     } else if (tabValue === 3) {
-      return !errors.status && !errors.startDate && !errors.endDate;
+      return !errors.pfNo && !errors.startDate && !errors.endDate;
     }
     return true;
   };
 
+
+
+
     const handleNext = async () => {
       if (!isValid()) return;
       if (tabValue === 3) {
-        postData();
+        formik.handleSubmit();
       } else {
         setTabValue(tabValue + 1);
       }
@@ -224,7 +232,7 @@ const navigate = useNavigate();
       async function getData() {
         try {
           const companyData = await postRequest(ServerConfig.url, REPORTS, {
-            "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+            "query" :` select * from paym_Company where company_user_id = '${isloggedin}'`
           });
           console.log(companyData.data);
           setCompanies(companyData.data);
@@ -251,7 +259,7 @@ VALUES
       const response = await postRequest(ServerConfig.url, REPORTS, { query });
       if (response.status === 200) {
         alert('Data saved successfully!');
-        navigate("/DepartmentFormMaster");
+        navigate("/DivisionMaster");
         handleCancel();
       } else {
         alert`(Unexpected response status: ${response.status})`;
@@ -321,15 +329,15 @@ VALUES
                     {tabValue === 0 && (
 
                       <Grid container spacing={2} sx={{ paddingTop: 2 }}>
-                 <Grid item xs={12} sm={4}>
+                 <Grid item xs={4}>
                   <FormControl fullWidth error={formik.touched.pnCompanyId && Boolean(formik.errors.pnCompanyId)}>
-                    <InputLabel shrink>Company</InputLabel>
+                    <InputLabel shrink>Company Name</InputLabel>
                     <Select
                       name="pnCompanyId"
                       value={formik.values.pnCompanyId}
                       onChange={formik.handleChange}
                       displayEmpty
-                      style={{ height: '40px' }}
+                     
                     >
                       <MenuItem value="">Select</MenuItem>
                       {companies.map((e) => (
@@ -349,8 +357,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Branch Code"
+                        
+                            label={
+                              <span>
+                                Branch Code
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="branchCode"
                             value={formik.values.branchCode}
                             onChange={formik.handleChange}
@@ -366,8 +379,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Branch Name"
+                         
+                            label={
+                              <span>
+                                Branch Name
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="branchName"
                             value={formik.values.branchName}
                             onChange={formik.handleChange}
@@ -383,8 +401,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Branch User Id"
+                          
+                            label={
+                              <span>
+                                Branch User Id
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="branchUserId"
                             autoComplete="off"
                             value={formik.values.branchUserId}
@@ -398,8 +421,13 @@ VALUES
                         <Grid item xs={4}>
                         <TextField
     fullWidth
-    size="small"
-    label="Branch Password"
+   
+    label={
+      <span>
+        Branch Password
+        <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+      </span>
+    }
     name="branchPassword"
     type="password"
     autoComplete="new-password"
@@ -422,8 +450,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Address Line 1"
+                         
+                            label={
+                              <span>
+                               Address Line1
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="addressLine1"
                             value={formik.values.addressLine1}
                             onChange={formik.handleChange}
@@ -439,8 +472,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Address Line 2"
+                           
+                            label={
+                              <span>
+                              Address Line2
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="addressLine2"
                             value={formik.values.addressLine2}
                             onChange={formik.handleChange}
@@ -456,8 +494,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Zip Code"
+                            
+                            label={
+                              <span>
+                               ZipCode
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="zipCode"
                             value={formik.values.zipCode}
                             onChange={handleChange}
@@ -473,8 +516,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="City"
+                          
+                            label={
+                              <span>
+                               City
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="city"
                             value={formik.values.city}
                             onChange={formik.handleChange}
@@ -490,8 +538,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="State"
+                          
+                            label={
+                              <span>
+                               State
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="state"
                             value={formik.values.state}
                             onChange={formik.handleChange}
@@ -507,8 +560,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Country"
+                            
+                            label={
+                              <span>
+                               Country
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="country"
                             value={formik.values.country}
                             onChange={formik.handleChange}
@@ -533,8 +591,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Phone No"
+                          
+                            label={
+                              <span>
+                                 Phone Number
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="phoneNo"  // Add this line
                             value={formik.values.phoneNo}
                             onChange={formik.handleChange}
@@ -550,8 +613,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Fax No"
+                      
+                            label={
+                              <span>
+                              FaxNo
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="faxNo"
                             value={formik.values.faxNo}
                             onChange={formik.handleChange}
@@ -567,8 +635,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="PF No"
+                           
+                            label={
+                              <span>
+                                PfNo
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="pfno"
                             value={formik.values.pfno}
                             onChange={formik.handleChange}
@@ -584,8 +657,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="ESI No"
+                     
+                            label={
+                              <span>
+                                EsiNo
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="esino"
                             value={formik.values.esino}
                             onChange={formik.handleChange}
@@ -601,8 +679,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Email Id"
+                          
+                            label={
+                              <span>
+                                 Email Address
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="emailId"
                             value={formik.values.emailId}
                             onChange={formik.handleChange}
@@ -618,8 +701,8 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Alternate Email Id"
+                        
+                           label="Alternate Email Address"
                             name="alternateEmailId"
                             value={formik.values.alternateEmailId}
                             onChange={formik.handleChange}
@@ -642,8 +725,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Status"
+                          
+                            label={
+                              <span>
+                               Status
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="status"
                             value={formik.values.status}
                             onChange={formik.handleChange}
@@ -659,8 +747,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Start Date"
+                       
+                            label={
+                              <span>
+                              Start Date
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="startDate"
                             type="date"
                             value={formik.values.startDate}
@@ -677,8 +770,13 @@ VALUES
                         <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="End Date"
+                            
+                            label={
+                              <span>
+                               End Date
+                                <span style={{color:'red' , marginLeft:'0.2rem'}}>*</span>
+                              </span>
+                            }
                             name="endDate"
                             type="date"
                             value={formik.values.endDate}

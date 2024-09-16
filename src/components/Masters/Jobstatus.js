@@ -1,134 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, Card, TextField, Button, Typography, FormControl, MenuItem, Select, FormHelperText, CardContent } from '@mui/material';
+import {
+  Grid,
+  Card,
+  TextField,
+  Button,
+  Typography,
+  FormControl,
+  MenuItem,
+  Select,
+  FormHelperText,
+  Container,Box,
+  CardContent
+} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
+import { postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
-import { PAYMCOMPANIES, PAYMBRANCHES, SAVE,REPORTS } from '../../serverconfiguration/controllers';
-
+import { REPORTS, SAVE } from '../../serverconfiguration/controllers';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import Navbar from "../Home Page/Navbar";
+import Sidenav from "../Home Page/Sidenav";
 export default function JobStatusFormMaster() {
   const navigate = useNavigate();
-
   const [company, setCompany] = useState([]);
-  const [branch, setBranch] = useState([]); 
-  const [filteredBranches, setFilteredBranches] = useState([]);
+  const [branch, setBranch] = useState([]);
   const [pnCompanyId, setPnCompanyId] = useState('');
-  const [pnBranchId, setPnBranchId] = useState('');
-  const [vJobStatusName, setVJobStatusName] = useState('');
-  const [status, setStatus] = useState('');
-  const [companyError, setCompanyError] = useState(false);
-  const [branchError, setBranchError] = useState(false);
-  const [jobStatusNameError, setJobStatusNameError] = useState(false);
-  const [statusError, setStatusError] = useState(false);
-  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
+  const [isloggedin, setIsloggedin] = useState(sessionStorage.getItem('user'));
 
   useEffect(() => {
     async function getData() {
       try {
         const companyData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+          query: `SELECT * FROM paym_Company WHERE company_user_id = '${isloggedin}'`,
         });
-        console.log(companyData.data);
         setCompany(companyData.data);
         if (companyData.data.length > 0) {
           setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching company data:', error);
       }
     }
     getData();
-  }, []);
-
+  }, [isloggedin]);
 
   useEffect(() => {
     async function getData() {
       try {
-        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
-        });
-        console.log("Branch data", BranchData.data)
-        setBranch(BranchData.data);
-       
+        if (pnCompanyId) {
+          const branchData = await postRequest(ServerConfig.url, REPORTS, {
+            query:` SELECT * FROM paym_branch WHERE pn_CompanyID = '${pnCompanyId}'`,
+          });
+          setBranch(branchData.data);
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching branch data:', error);
       }
     }
     getData();
-    console.log("Branch", branch)
-  }, [company]);
+  }, [pnCompanyId]);
 
- 
+  const validationSchema = Yup.object({
+    pnCompanyId: Yup.string().required('Please select a Company ID'),
+    pnBranchId: Yup.string().required('Please select a Branch ID'),
+    vJobStatusName: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,40}$/, 'Job Status Name must be alphanumeric and up to 40 characters')
+      .required('Job Status Name is required'),
+    status: Yup.string()
+      .matches(/^[A-Za-z]{1}$/, 'Status must be a single alphabetic character')
+      .required('Status is required'),
+  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    switch (name) {
-      case 'pnCompanyId':
-        setPnCompanyId(value);
-        setCompanyError(false);
-        break;
-      case 'pnBranchId':
-        setPnBranchId(value);
-        setBranchError(false);
-        break;
-      case 'vJobStatusName':
-        setVJobStatusName(value);
-        setJobStatusNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(value));
-        break;
-      case 'status':
-        setStatus(value.toUpperCase());
-        setStatusError(!/^[A-Za-z]{1}$/.test(value));
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleCancel = () => {
-    setPnCompanyId('');
-    setPnBranchId('');
-    setVJobStatusName('');
-    setStatus('');
-    setCompanyError(false);
-    setBranchError(false);
-    setJobStatusNameError(false);
-    setStatusError(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const hasError = !pnCompanyId || !pnBranchId || !/^[A-Za-z0-9\s]{1,40}$/.test(vJobStatusName) || !/^[A-Za-z]{1}$/.test(status);
-
-    setCompanyError(!pnCompanyId);
-    setBranchError(!pnBranchId);
-    setJobStatusNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(vJobStatusName));
-    setStatusError(!/^[A-Za-z]{1}$/.test(status));
-
-    if (hasError) {
-      return;
-    }
-
-    const formData = {
-      pnCompanyId,
-      pnBranchId,
-      vJobStatusName,
-      status,
-    };
-
+  const handleSubmit = async (values, { resetForm }) => {
     try {
       const response = await postRequest(ServerConfig.url, SAVE, {
-        query: `
-          INSERT INTO [dbo].[paym_JobStatus] 
-          ([pn_CompanyID], [BranchID], [v_JobStatusName], [status])
-          VALUES 
-          ('${pnCompanyId}', '${pnBranchId}', '${vJobStatusName}', '${status}') 
-        `
+        query:` INSERT INTO [dbo].[paym_JobStatus]([pn_CompanyID],[BranchID],[v_JobStatusName],[status]) VALUES ('${values.pnCompanyId}','${values.pnBranchId}','${values.vJobStatusName}','${values.status}')`,
       });
 
       if (response.status === 200) {
         alert('Data saved successfully');
-        navigate('/LevelFormMaster'); // Redirect or handle as needed
+        resetForm(); // Reset the form after successful submission
+        navigate('/LevelFormMaster');
       } else {
         alert('Failed to save data');
       }
@@ -138,111 +90,151 @@ export default function JobStatusFormMaster() {
     }
   };
 
+  const handleCancel = (resetForm) => {
+    resetForm(); // Reset the form on cancel
+  };
+
   return (
     <Grid container>
-      <Grid item xs={12}>
-        <Card style={{ maxWidth: 600, margin: '0 auto' }}>
-          <CardContent>
-            <Typography variant="h5" color="textPrimary" align="center">
-              Job Status 
-            </Typography>
-            
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={companyError}>
-                <TextField
-  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
-  variant="outlined"
-  fullWidth
-  InputProps={{ readOnly: true }}
-/>
-
-                  {companyError && (
-                    <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a CompanyID
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth error={branchError}>
-                  <Select
-                    value={pnBranchId}
-                    onChange={handleChange}
-                    name="pnBranchId"
-                    displayEmpty
-                    sx={{ height: '50px' }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select a BranchID
-                    </MenuItem>
-                    {branch.map((e) => (
-                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
-                        {e.BranchName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {branchError && (
-                    <FormHelperText sx={{ color: 'error.main' }}>
-                      Please select a BranchID
-                    </FormHelperText>
-                  )}
-                </FormControl>
-              </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={jobStatusNameError}>
-                    <TextField
-                      name="vJobStatusName"
-                      label="Job Status Name"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={vJobStatusName}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    {jobStatusNameError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Job Status Name (alphanumeric characters, max length 40)
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={statusError}>
-                    <TextField
-                      name="status"
-                      label="Status"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={status}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    {statusError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Status (single alphabetic character)
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid container spacing={1} paddingTop={'10px'}>
-                  <Grid item xs={12} align="right">
-                    <Button style={{ margin: '0 5px' }} type="submit" variant="contained" color="primary">
-                      Save
-                    </Button>
-                    <Button style={{ margin: '0 5px' }} type="button" variant="contained" color="secondary" onClick={handleCancel}>
-                      Cancel
-                    </Button>
+    <Grid item xs={12}>
+      <div style={{ backgroundColor: "#fff" }}>
+        <Navbar />
+        <Box height={30} />
+        <Box sx={{ display: "flex" }}>
+          <Sidenav />
+          <Grid item xs={12} sm={10} md={9} lg={8} xl={7} style={{ marginLeft: "auto", marginRight: "auto" }}>
+            <Container maxWidth="md" sx={{ p: 2 }}>
+    <Grid style={{ padding: '80px 5px 0 5px' }}>
+      <Card style={{ maxWidth: 600, margin: '0 auto' }}>
+        <CardContent>
+          <Typography variant="h5" gutterBottom color="textPrimary" align="center">
+            JobStatus
+          </Typography>
+          <Formik
+            initialValues={{
+              pnCompanyId: pnCompanyId || '',
+              pnBranchId: '',
+              vJobStatusName: '',
+              status: '',
+            }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+            enableReinitialize
+          >
+            {({ values, handleChange, handleBlur, errors, touched, resetForm }) => (
+              <Form>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={touched.pnCompanyId && Boolean(errors.pnCompanyId)}>
+                      <TextField
+                        value={company.find(c => c.pn_CompanyID === values.pnCompanyId)?.CompanyName || ''}
+                        variant="outlined"
+                        fullWidth
+                        InputProps={{ readOnly: true }}
+                      />
+                      {touched.pnCompanyId && errors.pnCompanyId && (
+                        <FormHelperText sx={{ color: 'error.main' }}>
+                          {errors.pnCompanyId}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={touched.pnBranchId && Boolean(errors.pnBranchId)}>
+                      <Select
+                        value={values.pnBranchId}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        name="pnBranchId"
+                        displayEmpty
+                      >
+                        <MenuItem value="" disabled>
+                         Branch Name
+                        </MenuItem>
+                        {branch.map(b => (
+                          <MenuItem key={b.pn_BranchID} value={b.pn_BranchID}>
+                            {b.BranchName}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {touched.pnBranchId && errors.pnBranchId && (
+                        <FormHelperText sx={{ color: 'error.main' }}>
+                          {errors.pnBranchId}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={touched.vJobStatusName && Boolean(errors.vJobStatusName)}>
+                      <TextField
+                        name="vJobStatusName"
+                        label={<span>Job Status Name <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span></span>}
+                        variant="outlined"
+                        fullWidth
+                        value={values.vJobStatusName}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      {touched.vJobStatusName && errors.vJobStatusName && (
+                        <FormHelperText sx={{ color: 'error.main' }}>
+                          {errors.vJobStatusName}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth error={touched.status && Boolean(errors.status)}>
+                      <TextField
+                        name="status"
+                        label={<span>Status <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span></span>}
+                        variant="outlined"
+                        fullWidth
+                        value={values.status}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      {touched.status && errors.status && (
+                        <FormHelperText sx={{ color: 'error.main' }}>
+                          {errors.status}
+                        </FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid container spacing={1} paddingTop="20px">
+                    <Grid item xs={12} align="right">
+                      <Button
+                        style={{ margin: '0 5px' }}
+                        type="button"
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => handleCancel(resetForm)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        style={{ margin: '0 5px' }}
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                      >
+                        Save
+                      </Button>
+                    </Grid>
                   </Grid>
                 </Grid>
-              </Grid>
-            </form>
-          </CardContent>
-        </Card>
-      </Grid>
+              </Form>
+            )}
+          </Formik>
+        </CardContent>
+      </Card>
+    </Grid>
+    </Container>
+    </Grid>
+    </Box>
+    </div>
+    </Grid>
     </Grid>
   );
 }

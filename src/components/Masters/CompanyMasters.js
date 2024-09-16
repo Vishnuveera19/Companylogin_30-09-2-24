@@ -10,13 +10,13 @@ import * as yup from 'yup';
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
+
 const CompanyMasterss = () => {
   const [tabValue, setTabValue] = useState(0);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
   const [popoverMessage, setPopoverMessage] = useState('');
   const navigate = useNavigate();
-
   const validationSchema = yup.object({
     companyName: yup
       .string()
@@ -28,15 +28,17 @@ const CompanyMasterss = () => {
       .max(20, 'Company Code should be at most 20 characters')
       .required('Company Code is required')
       .matches(/^[a-zA-Z0-9]+$/, 'Company Code should contain only letters and numbers'),
-    addressLine1: yup
+      addressLine1: yup
       .string()
       .max(100, 'Address Line 1 should be at most 100 characters')
       .required('Address Line 1 is required')
-      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 1 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+      .matches(/^[a-zA-Z0-9\s,/-]+$/, 'Address Line 1 should contain only letters, numbers,commas forward slashes (/), and hyphens (-)'),
+    
     addressLine2: yup
       .string()
       .max(100, 'Address Line 2 should be at most 100 characters')
-      .matches(/^[a-zA-Z0-9\s,.-]+$/, 'Address Line 2 should contain only letters, numbers, spaces, commas, periods, and hyphens'),
+      .required('Address Line 2 is required')
+      .matches(/^[a-zA-Z0-9\s,/-]+$/, 'Address Line 2 should contain only letters, numbers,commas forward slashes (/), and hyphens (-)'),
     city: yup
       .string()
       .max(50, 'City should be at most 50 characters')
@@ -65,11 +67,13 @@ const CompanyMasterss = () => {
     faxNo: yup
       .string()
       .max(10, 'Fax Number should be at most 10 characters')
+      .required('Fax Number is required')
       .matches(/^\d{10}$/, 'Fax Number should be 10 digits'),
     emailAddress: yup
       .string()
       .email('Enter a valid email')
       .max(100, 'Email Address should be at most 100 characters')
+      
       .required('Email Address is required'),
     alternateEmailAddress: yup
       .string()
@@ -83,7 +87,10 @@ const CompanyMasterss = () => {
     esiNo: yup
       .string()
       .max(20, 'ESI Number should be at most 20 characters')
+      .required('ESI Number is required')
+      
       .matches(/^\d{10}$/, 'ESI Number should be 10 digits'),
+      
     startDate: yup
       .date()
       .required('Start Date is required'),
@@ -94,13 +101,13 @@ const CompanyMasterss = () => {
       companyUserId: yup
       .string()
       .matches(/^[a-zA-Z0-9_]+$/, 'Company User ID can only contain letters, numbers, and underscores')
-      .max(10, 'Branch User ID should be at most 10 characters')
-      .required('Branch User ID is required'),
-
+      .max(10, 'Company User ID should be at most 10 characters')
+      .required('Company User ID is required'),
       companyPassword: yup
       .string()
-      .matches(/^[a-zA-Z0-9]{1,8}$/, 'Company Password must be 8 characters long and include at least one letter, one number, and one special character')
+      .matches(/^[a-zA-Z0-9\s]+$/, 'Company Password must be at least 8 characters long and include at least one letter and one number')
       .required('Company Password is required'),
+    
   });
 
   const formik = useFormik({
@@ -147,13 +154,13 @@ const CompanyMasterss = () => {
 
   const fetchLocationDetails = async (zipcode) => {
     try {
-      const response = await axios.get`(https://api.postalpincode.in/pincode/${zipcode})`;
-      const data = response.data[0];
-      if (data.Status === 'Success') {
-        const locationData = data.PostOffice[0];
-        formik.setFieldValue('city', locationData.District);
-        formik.setFieldValue('state', locationData.State);
-        formik.setFieldValue('country', locationData.Country);
+      const response = await axios.get(`https://api.postalpincode.in/pincode/${zipcode}`);
+      const data = response.data;
+      if (data.length > 0 && data[0].Status === 'Success') {
+        const locationData = data[0];
+        formik.setFieldValue('city', locationData.PostOffice[0].District);
+        formik.setFieldValue('state', locationData.PostOffice[0].State);
+        formik.setFieldValue('country', 'India'); // Assuming the country is always India
       } else {
         alert('Invalid Zip Code');
       }
@@ -164,10 +171,23 @@ const CompanyMasterss = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     formik.handleChange(e);
-    if (name === 'ZipCode' && value.length === 6) {
-      fetchLocationDetails(value);
+  
+    if (name === 'ZipCode') {
+      if (value.length === 6) {
+        fetchLocationDetails(value);
+      } else {
+        formik.setFieldValue('city', '');
+        formik.setFieldValue('state', '');
+        formik.setFieldValue('country', '');
+      }
     }
   };
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && formik.values.ZipCode && formik.values.ZipCode.length === 6) {
+      fetchLocationDetails(formik.values.ZipCode);
+    }
+  };
+  
   const isValid = () => {
     const errors = formik.errors;
     if (tabValue === 0) {
@@ -251,7 +271,12 @@ const CompanyMasterss = () => {
               <Grid container spacing={2} sx={{paddingTop:2}}>
                 <Grid item xs={4}>
                   <TextField
-                    label="Company Name"
+                   label={
+                    <span>
+                      Company Name
+                      <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                    </span>
+                  }
                     name="companyName"
                     value={formik.values.companyName}
                     onChange={formik.handleChange}
@@ -259,11 +284,17 @@ const CompanyMasterss = () => {
                     error={formik.touched.companyName && Boolean(formik.errors.companyName)}
                     helperText={formik.touched.companyName && formik.errors.companyName}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="Company Code"
+                   label={
+                    <span>
+                      Company Code
+                      <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                    </span>
+                  }
                     name="companyCode"
                     value={formik.values.companyCode}
                     onChange={formik.handleChange}
@@ -271,13 +302,19 @@ const CompanyMasterss = () => {
                     error={formik.touched.companyCode && Boolean(formik.errors.companyCode)}
                     helperText={formik.touched.companyCode && formik.errors.companyCode}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                           <TextField
                             fullWidth
-                            size="small"
-                            label="Company User Id"
+                           
+                            label={
+                              <span>
+                                Company User Id
+                                <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                              </span>
+                            }
                             name="companyUserId"
                             autoComplete="off"
                             value={formik.values.companyUserId}
@@ -291,8 +328,12 @@ const CompanyMasterss = () => {
                         <Grid item xs={4}>
                         <TextField
     fullWidth
-    size="small"
-    label="Company Password"
+    label={
+      <span>
+        Company Password
+        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+      </span>
+    }
     name="companyPassword"
     type="password"
     autoComplete="new-password"
@@ -309,21 +350,32 @@ const CompanyMasterss = () => {
             )}
             {tabValue === 1 && (
               <Grid container spacing={2}  sx={{paddingTop:2}}>
-                <Grid item xs={12}>
+                <Grid item xs={4}>
                   <TextField
-                    label="Address Line 1"
+                     fullWidth
+                   label={
+                    <span>
+                    Address Line1
+                      <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                    </span>
+                  }
                     name="addressLine1"
                     value={formik.values.addressLine1}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                     error={formik.touched.addressLine1 && Boolean(formik.errors.addressLine1)}
                     helperText={formik.touched.addressLine1 && formik.errors.addressLine1}
-                    fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={4}>
                   <TextField
-                    label="Address Line 2"
+                    label={
+                      <span>
+                      Address Line2
+                        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                      </span>
+                    }
                     name="addressLine2"
                     value={formik.values.addressLine2}
                     onChange={formik.handleChange}
@@ -331,59 +383,82 @@ const CompanyMasterss = () => {
                     error={formik.touched.addressLine2 && Boolean(formik.errors.addressLine2)}
                     helperText={formik.touched.addressLine2 && formik.errors.addressLine2}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
-                  <TextField
-                    label="Zip Code"
-                    name="ZipCode"
-                    value={formik.values.ZipCode}
-                    onChange={(e) => {
-                      formik.handleChange(e);
-                      handleChange(e);
-                    }}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.ZipCode && Boolean(formik.errors.ZipCode)}
-                    helperText={formik.touched.ZipCode && formik.errors.ZipCode}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={4} >
-                  <TextField
-                    label="City"
-                    name="city"
-                    value={formik.values.city}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.city && Boolean(formik.errors.city)}
-                    helperText={formik.touched.city && formik.errors.city}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item  sm={4}>
-                  <TextField
-                    label="State"
-                    name="state"
-                    value={formik.values.state}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.state && Boolean(formik.errors.state)}
-                    helperText={formik.touched.state && formik.errors.state}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item  sm={4}>
-                  <TextField
-                    label="Country"
-                    name="country"
-                    value={formik.values.country}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={formik.touched.country && Boolean(formik.errors.country)}
-                    helperText={formik.touched.country && formik.errors.country}
-                    fullWidth
-                  />
-                </Grid>
+  <TextField
+    label={
+      <span>
+        ZipCode
+        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+      </span>
+    }
+    name="ZipCode"
+    value={formik.values.ZipCode}
+    onChange={handleChange}
+    onKeyDown={handleKeyDown}
+    onBlur={formik.handleBlur}
+    error={formik.touched.ZipCode && Boolean(formik.errors.ZipCode)}
+    helperText={formik.touched.ZipCode && formik.errors.ZipCode}
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
+<Grid item xs={4} >
+  <TextField
+    label={
+      <span>
+        City
+        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+      </span>
+    }
+    name="city"
+    value={formik.values.city}
+    onChange={formik.handleChange}
+    onBlur={formik.handleBlur}
+    error={formik.touched.city && Boolean(formik.errors.city)}
+    helperText={formik.touched.city && formik.errors.city}
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
+<Grid item  sm={4}>
+  <TextField
+    label={
+      <span>
+        State
+        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+      </span>
+    }
+    name="state"
+    value={formik.values.state}
+    onChange={formik.handleChange}
+    onBlur={formik.handleBlur}
+    error={formik.touched.state && Boolean(formik.errors.state)}
+    helperText={formik.touched.state && formik.errors.state}
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
+<Grid item  sm={4}>
+  <TextField
+    label={
+      <span>
+        Country
+        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+      </span>
+    }
+    name="country"
+    value={formik.values.country}
+    onChange={formik.handleChange}
+    onBlur={formik.handleBlur}
+    error={formik.touched.country && Boolean(formik.errors.country)}
+    helperText={formik.touched.country && formik.errors.country}
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
               
               </Grid>
             )}
@@ -391,7 +466,12 @@ const CompanyMasterss = () => {
               <Grid container spacing={2}  sx={{paddingTop:2}}>
                 <Grid item xs={4}>
                   <TextField
-                    label="Phone Number"
+                     label={
+                      <span>
+                     Phone Number
+                        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                      </span>
+                    }
                     name="phoneNumber"
                     value={formik.values.phoneNumber}
                     onChange={formik.handleChange}
@@ -399,11 +479,17 @@ const CompanyMasterss = () => {
                     error={formik.touched.phoneNumber && Boolean(formik.errors.phoneNumber)}
                     helperText={formik.touched.phoneNumber && formik.errors.phoneNumber}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="Fax Number"
+                    label={
+                      <span>
+                     FaxNo
+                        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                      </span>
+                    }
                     name="faxNo"
                     value={formik.values.faxNo}
                     onChange={formik.handleChange}
@@ -411,11 +497,17 @@ const CompanyMasterss = () => {
                     error={formik.touched.faxNo && Boolean(formik.errors.faxNo)}
                     helperText={formik.touched.faxNo && formik.errors.faxNo}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="Email Address"
+                   label={
+                    <span>
+                   Email Address
+                      <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                    </span>
+                  }
                     name="emailAddress"
                     value={formik.values.emailAddress}
                     onChange={formik.handleChange}
@@ -423,6 +515,7 @@ const CompanyMasterss = () => {
                     error={formik.touched.emailAddress && Boolean(formik.errors.emailAddress)}
                     helperText={formik.touched.emailAddress && formik.errors.emailAddress}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
@@ -435,6 +528,7 @@ const CompanyMasterss = () => {
                     error={formik.touched.alternateEmailAddress && Boolean(formik.errors.alternateEmailAddress)}
                     helperText={formik.touched.alternateEmailAddress && formik.errors.alternateEmailAddress}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
               </Grid>
@@ -443,7 +537,12 @@ const CompanyMasterss = () => {
               <Grid container spacing={2}  sx={{paddingTop:2}}>
                 <Grid item xs={4}>
                   <TextField
-                    label="PF Number"
+                     label={
+                      <span>
+                    PfNo
+                        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                      </span>
+                    }
                     name="pfNo"
                     value={formik.values.pfNo}
                     onChange={formik.handleChange}
@@ -451,11 +550,17 @@ const CompanyMasterss = () => {
                     error={formik.touched.pfNo && Boolean(formik.errors.pfNo)}
                     helperText={formik.touched.pfNo && formik.errors.pfNo}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="ESI Number"
+                    label={
+                      <span>
+                    EsiNo
+                        <span style={{ color: 'red', marginLeft: '0.25rem' }}>*</span>
+                      </span>
+                    }
                     name="esiNo"
                     value={formik.values.esiNo}
                     onChange={formik.handleChange}
@@ -463,11 +568,17 @@ const CompanyMasterss = () => {
                     error={formik.touched.esiNo && Boolean(formik.errors.esiNo)}
                     helperText={formik.touched.esiNo && formik.errors.esiNo}
                     fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="Start Date"
+                    label={
+                      <span>
+                        Start Date
+                        <span style={{color:'red',marginLeft:'0.25rem'}}>*</span>
+                      </span>
+                    }
                     name="startDate"
                     type="date"
                     value={formik.values.startDate}
@@ -483,7 +594,12 @@ const CompanyMasterss = () => {
                 </Grid>
                 <Grid item xs={4}>
                   <TextField
-                    label="End Date"
+                   label={
+                    <span>
+                      End Date
+                      <span style={{color:'red',marginLeft:'0.25rem'}}>*</span>
+                    </span>
+                  }
                     name="endDate"
                     type="date"
                     value={formik.values.endDate}

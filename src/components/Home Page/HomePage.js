@@ -34,7 +34,7 @@ import Jobstatus from "../../images/job-status-icon.png"
 import Level from "../../images/paym-level-icon.png"
 import Leave from "../../images/paym-leave-icon.png"
 import Designation from "../../images/paym-desiganation-icon.png"
-import Group from "../../images/paym-desiganation-icon.png"
+import Group from "../../images/group-icons.png"
 
 
 
@@ -67,7 +67,7 @@ export default function HomePage() {
         { text: "Jobstatus", icon: <img src={Jobstatus} width={40} height={40}  />  , onclick : () => navigate('/JobStatusFormMaster')  },
         { text: "Level", icon: <img src={Level} width={40} height={40}  /> , onclick : () => navigate('/LevelFormMaster')   },
         { text: "Leave", icon: <img src={Leave} width={50} height={40}  />  , onclick : () => navigate('/PaymLeaveMaster')  },
-        { text: "Group", icon: <img src={Group} width={40} height={40}  />  , onclick : () => navigate('/CompanyMasterss')  },
+        { text: "Group", icon: <img src={Group} width={40} height={40}  />  , onclick : () => navigate('/')  },
       ];
       
     

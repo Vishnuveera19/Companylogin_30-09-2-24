@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Grid,
-  Card,
+  Paper,
   TextField,
   Button,
   Typography,
@@ -9,148 +8,91 @@ import {
   MenuItem,
   Select,
   FormHelperText,
-  CardContent,
+  Grid,Box,Container,
+  Stack,
 } from '@mui/material';
-import { getRequest, postRequest } from '../../serverconfiguration/requestcomp';
+import { postRequest } from '../../serverconfiguration/requestcomp';
 import { ServerConfig } from '../../serverconfiguration/serverconfig';
 import { useNavigate } from 'react-router-dom';
-import { PAYMBRANCHES, PAYMCOMPANIES, PAYMDESIGNATION, SAVE,REPORTS,PAYMSHIFT } from '../../serverconfiguration/controllers';
-
+import { REPORTS, SAVE } from '../../serverconfiguration/controllers';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import Navbar from "../Home Page/Navbar";
+import Sidenav from "../Home Page/Sidenav";
 export default function ShiftFormMaster() {
   const navigate = useNavigate();
-
   const [company, setCompany] = useState([]);
-  const [branch, setBranch] = useState([]); // Raw branch data
+  const [branch, setBranch] = useState([]);
   const [pnCompanyId, setPnCompanyId] = useState('');
-  const [pnBranchId, setPnBranchId] = useState('');
-  const [vShiftName, setvShiftName] = useState('');
-  const [vShiftFrom, setvShiftFrom] = useState('');
-  const [vShiftTo, setvShiftTo] = useState('');
-  const [status,setStatus] = useState('');
-  const [vShiftCategory,setvShiftCategory] = useState('');
-  const [companyError, setCompanyError] = useState(false);
-  const [branchError, setBranchError] = useState(false);
-  const [vShiftNameError, setvShiftNameError] = useState(false);
-  const [vShiftFromError, setvShiftFromError] = useState(false);
-  const [vShiftToError, setvShiftToError] = useState(false);
-  const [vShiftCategoryError,setvShiftCategoryError] = useState(false);
-  const [statusError, setStatusError] = useState(false);
-  const [isloggedin, setisloggedin] = useState(sessionStorage.getItem("user"))
+  const [isLoggedIn, setIsLoggedIn] = useState(sessionStorage.getItem('user'));
 
-
+  // Fetch company data
   useEffect(() => {
     async function getData() {
       try {
         const companyData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_Company where company_user_id = '${isloggedin}'`
+          query: `SELECT * FROM paym_Company WHERE company_user_id = '${isLoggedIn}'`,
         });
-        console.log(companyData.data);
         setCompany(companyData.data);
         if (companyData.data.length > 0) {
           setPnCompanyId(companyData.data[0].pn_CompanyID); // Set default company ID
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching company data:', error);
       }
     }
     getData();
-  }, []);
+  }, [isLoggedIn]);
 
-  
+  // Fetch branch data based on company selection
   useEffect(() => {
     async function getData() {
       try {
-        const BranchData = await postRequest(ServerConfig.url, REPORTS, {
-          "query" : `select * from paym_branch where pn_CompanyID = '${company[0].pn_CompanyID}'`
-        });
-        console.log("Branch data", BranchData.data)
-        setBranch(BranchData.data);
-       
+        if (pnCompanyId) {
+          const branchData = await postRequest(ServerConfig.url, REPORTS, {
+            query: `SELECT * FROM paym_branch WHERE pn_CompanyID = '${pnCompanyId}'`,
+          });
+          setBranch(branchData.data);
+        }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching branch data:', error);
       }
     }
     getData();
-    console.log("Branch", branch)
-  }, [company]);
+  }, [pnCompanyId]);
 
+  // Form validation schema using Yup
+  const validationSchema = Yup.object({
+    pnCompanyId: Yup.string().required('Please select a Company ID'),
+    pnBranchId: Yup.string().required('Please select a Branch ID'),
+    vShiftName: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,40}$/, 'Shift Name must be alphanumeric and up to 40 characters')
+      .required('Shift Name is required'),
+    vShiftFrom: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,5}$/, 'Shift From must be alphanumeric and up to 5 characters')
+      .required('Shift From is required'),
+    vShiftTo: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,5}$/, 'Shift To must be alphanumeric and up to 5 characters')
+      .required('Shift To is required'),
+    vShiftCategory: Yup.string()
+      .matches(/^[A-Za-z0-9\s]{1,20}$/, 'Shift Category must be alphanumeric and up to 20 characters')
+      .required('Shift Category is required'),
+    status: Yup.string()
+      .matches(/^[A-Za-z]$/, 'Status must contain only alphabetic characters')
+      .required('Status is required'),
+  });
 
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    switch (name) {
-      case 'pnCompanyId':
-        setPnCompanyId(value);
-        setCompanyError(false);
-        break;
-      case 'pnBranchId':
-        setPnBranchId(value);
-        setBranchError(false);
-        break;
-      case 'vShiftName':
-        setvShiftName(value);
-        setvShiftNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(value));
-        break;
-      case 'vShiftFrom':
-        setvShiftFrom(value);
-        setvShiftFromError(!/^[A-Za-z0-9\s]{1,5}$/.test(value));
-        break;
-        case 'vShiftTo':
-          setvShiftTo(value);
-          setvShiftToError(!/^[A-Za-z0-9\s]{1,5}$/.test(value));
-          break;
-        case 'vShiftCategory':
-            setvShiftCategory(value);
-            setvShiftCategoryError(!/^[A-Za-z0-9\s]{1,20}$/.test(value));
-            break;
-
-      case 'status':
-        setStatus(value.toUpperCase());
-        setStatusError(!/^[A-Za-z]{1}$/.test(value));
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const hasError = !pnCompanyId || !pnBranchId || !/^[A-Za-z0-9\s]{1,40}$/.test(vShiftName) ||
-    !/^[A-Za-z0-9\s]{1,5}$/.test(vShiftFrom) || !/^[A-Za-z0-9\s]{1,5}$/.test(vShiftTo)|| !/^[A-Za-z0-9\s]{1,20}$/.test(vShiftCategory) ||!/^[A-Za-z]{1}$/.test(status);
-
-    setCompanyError(!pnCompanyId);
-    setBranchError(!pnBranchId);
-    setvShiftNameError(!/^[A-Za-z0-9\s]{1,40}$/.test(vShiftName));
-    setvShiftFromError(!/^[A-Za-z0-9\s]{1,5}$/.test(vShiftFrom));
-    setvShiftToError(!/^[A-Za-z0-9\s]{1,5}$/.test(vShiftTo));
-    setvShiftCategoryError(!/^[A-Za-z0-9\s]{1,20}$/.test(vShiftCategory));
-
-    setStatusError(!/^[A-Za-z]{1}$/.test(status));
-
-    if (hasError) {
-      return;
-    }
-
-    const formData = {
-      pnCompanyId,
-      pnBranchId,
-      vShiftName,
-      vShiftFrom,
-      vShiftTo,
-      vShiftCategory,
-      status,
-    };
-
+  // Handle form submission
+  const handleSubmit = async (values, { resetForm }) => {
     try {
       const response = await postRequest(ServerConfig.url, SAVE, {
-        query: `INSERT INTO [dbo].[paym_Shift]([pn_CompanyID], [v_ShiftName], [v_ShiftFrom], [v_ShiftTo], [status], [BranchID], [v_ShiftCategory]) VALUES (${pnCompanyId}, '${vShiftName}', '${vShiftFrom}', '${vShiftTo}', '${status}', ${pnBranchId}, '${vShiftCategory}')`
+        query: `INSERT INTO [dbo].[paym_Shift]([pn_CompanyID],[BranchID],[v_ShiftName],[v_ShiftFrom],[v_ShiftTo],[status],[v_ShiftCategory]) VALUES ('${values.pnCompanyId}', '${values.pnBranchId}', '${values.vShiftName}', '${values.vShiftFrom}', '${values.vShiftTo}', '${values.status}', '${values.vShiftCategory}')`,
       });
 
       if (response.status === 200) {
         alert('Data saved successfully');
-        navigate("/CategoryFormMaster");
+        resetForm(); // Reset the form after successful submission
+        navigate('/CategoryFormMaster'); // Adjust navigation if needed
       } else {
         alert('Failed to save data');
       }
@@ -160,159 +102,223 @@ export default function ShiftFormMaster() {
     }
   };
 
-  return (
-    <div>
-      <Grid style={{ padding: '80px 5px 0 5px' }}>
-        <Card style={{ maxWidth: 600, margin: '0 auto' }}>
-          <CardContent>
-            <Typography variant="h5" color="textPrimary" align="center">
-              Shift Form
-            </Typography>
-            <Typography variant='subtitle1' color="textSecondary" align='center' marginBottom={3}>
-            </Typography>
-            
-            <form onSubmit={handleSubmit}>
-              <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-               
-                <TextField
-  value={company.find(c => c.pn_CompanyID === pnCompanyId)?.CompanyName || ''}
-  variant="outlined"
-  fullWidth
-  InputProps={{ readOnly: true }}
-/>
+  // Handle form cancellation
+  const handleCancel = (resetForm) => {
+    resetForm(); // Reset the form on cancel
+    navigate('/CategoryFormMaster'); // Adjust navigation if needed
+  };
 
-                 
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                  <Select
-                    value={pnBranchId}
-                    onChange={handleChange}
-                    name="pnBranchId"
-                    fullWidth
-                    displayEmpty
-                    sx={{ height: '50px' }}
-                  >
-                    <MenuItem value="" disabled>
-                      Select a BranchID
-                    </MenuItem>
-                    {branch.map((e) => (
-                      <MenuItem key={e.BranchName} value={e.pn_BranchID}>
-                        {e.BranchName}
+  return (
+    <Grid container>
+    <Grid item xs={12}>
+      <div style={{ backgroundColor: "#fff" }}>
+        <Navbar />
+        <Box height={30} />
+        <Box sx={{ display: "flex" }}>
+          <Sidenav />
+          <Grid item xs={12} sm={10} md={9} lg={8} xl={7} style={{ marginLeft: "auto", marginRight: "auto" }}>
+            <Container maxWidth="md" sx={{ p: 2 }}>
+    <Stack spacing={3} alignItems="center" sx={{ padding: '80px 5px 0 5px' }}>
+      <Paper sx={{ width: '100%', maxWidth: 800, padding: 3 }}>
+        <Typography variant="h5" gutterBottom align="center">
+          Shift
+        </Typography>
+        <Formik
+          initialValues={{
+            pnCompanyId: pnCompanyId || '',
+            pnBranchId: '',
+            vShiftName: '',
+            vShiftFrom: '',
+            vShiftTo: '',
+            vShiftCategory: '',
+            status: '',
+          }}
+          validationSchema={validationSchema}
+          onSubmit={(values, { resetForm }) => handleSubmit(values, { resetForm })}
+          enableReinitialize
+        >
+          {({ values, handleChange, handleBlur, errors, touched, resetForm }) => (
+            <Form>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.pnCompanyId && Boolean(errors.pnCompanyId)}>
+                    <TextField
+                      value={company.find((c) => c.pn_CompanyID === values.pnCompanyId)?.CompanyName || ''}
+                      variant="outlined"
+                      fullWidth
+                      InputProps={{ readOnly: true }}
+                     
+                    />
+                    {touched.pnCompanyId && errors.pnCompanyId && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.pnCompanyId}</FormHelperText>
+                    )}
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.pnBranchId && Boolean(errors.pnBranchId)}>
+                    <Select
+                      name="pnBranchId"
+                      value={values.pnBranchId}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      displayEmpty
+                      renderValue={(selected) => selected ? branch.find((b) => b.pn_BranchID === selected)?.BranchName : 'Branch Name'}
+                    >
+                      <MenuItem value="" disabled>
+                        Branch Name
                       </MenuItem>
-                    ))}
-                  </Select>
-                  
-              </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={vShiftNameError}>
+                      {branch.map((b) => (
+                        <MenuItem key={b.pn_BranchID} value={b.pn_BranchID}>
+                          {b.BranchName}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {touched.pnBranchId && errors.pnBranchId && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.pnBranchId}</FormHelperText>
+                    )}
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.vShiftName && Boolean(errors.vShiftName)}>
                     <TextField
                       name="vShiftName"
-                      label="vShiftName"
+                      label={
+                        <span>
+                          Shift Name
+                          <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                        </span>
+                      }
                       variant="outlined"
                       fullWidth
-                      required
-                      value={vShiftName}
+                     
+                      value={values.vShiftName}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       InputLabelProps={{ shrink: true }}
                     />
-                    {vShiftNameError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Shift Name (alphanumeric characters, max length 40)
-                      </FormHelperText>
+                    {touched.vShiftName && errors.vShiftName && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.vShiftName}</FormHelperText>
                     )}
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={vShiftFromError}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.vShiftFrom && Boolean(errors.vShiftFrom)}>
                     <TextField
                       name="vShiftFrom"
-                      label="vShiftFrom"
+                      label={
+                        <span>
+                          Shift From
+                          <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                        </span>
+                      }
                       variant="outlined"
                       fullWidth
-                      required
-                      value={vShiftFrom}
+                     
+                      value={values.vShiftFrom}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       InputLabelProps={{ shrink: true }}
                     />
-                    {vShiftFromError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid  characters 1 to 5
-                      </FormHelperText>
+                    {touched.vShiftFrom && errors.vShiftFrom && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.vShiftFrom}</FormHelperText>
                     )}
                   </FormControl>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={vShiftToError}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.vShiftTo && Boolean(errors.vShiftTo)}>
                     <TextField
                       name="vShiftTo"
-                      label="vShiftTo"
+                      label={
+                        <span>
+                          Shift To
+                          <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                        </span>
+                      }
                       variant="outlined"
                       fullWidth
-                      required
-                      value={vShiftTo}
+                     
+                      value={values.vShiftTo}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       InputLabelProps={{ shrink: true }}
                     />
-                    {vShiftToError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid  characters 1 to 5
-                      </FormHelperText>
+                    {touched.vShiftTo && errors.vShiftTo && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.vShiftTo}</FormHelperText>
                     )}
                   </FormControl>
                 </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={vShiftCategoryError}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth error={touched.vShiftCategory && Boolean(errors.vShiftCategory)}>
                     <TextField
                       name="vShiftCategory"
-                      label="vShiftCategory"
+                      label={
+                        <span>
+                          Shift Category
+                          <span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span>
+                        </span>
+                      }
                       variant="outlined"
                       fullWidth
-                      required
-                      value={vShiftCategory}
+                     
+                      value={values.vShiftCategory}
                       onChange={handleChange}
+                      onBlur={handleBlur}
                       InputLabelProps={{ shrink: true }}
                     />
-                    {vShiftCategoryError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid  characters 1 to 20
-                      </FormHelperText>
+                    {touched.vShiftCategory && errors.vShiftCategory && (
+                      <FormHelperText sx={{ color: 'error.main' }}>{errors.vShiftCategory}</FormHelperText>
                     )}
                   </FormControl>
                 </Grid>
-                
                 <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth error={statusError}>
-                    <TextField
-                      name="status"
-                      label="Status"
-                      variant="outlined"
-                      fullWidth
-                      required
-                      value={status}
-                      onChange={handleChange}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                    {statusError && (
-                      <FormHelperText sx={{ color: 'red' }}>
-                        Please enter a valid Status (only alphabetic characters)
-                      </FormHelperText>
-                    )}
-                  </FormControl>
-                </Grid>
-                <Grid container spacing={1} paddingTop={'10px'}>
+                    <FormControl fullWidth error={touched.status && Boolean(errors.status)}>
+                      <TextField
+                        name="status"
+                        label={<span>Status<span style={{ color: 'red', marginLeft: '0.2rem' }}>*</span></span>}
+                        variant="outlined"
+                        fullWidth
+                        value={values.status}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                      {touched.status && errors.status && (
+                        <FormHelperText sx={{ color: 'error.main' }}>{errors.status}</FormHelperText>
+                      )}
+                    </FormControl>
+                  </Grid>
+                  <Grid container spacing={1} paddingTop="20px">
                   <Grid item xs={12} align="right">
-                    <Button style={{ margin: '0 5px' }} type="submit" variant="contained" color="primary">
+                    <Button
+                      style={{ margin: '0 5px' }}
+                      type="button"
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => handleCancel(resetForm)} // Call handleCancel on click
+                    >
+                      CANCEL
+                    </Button>
+                    <Button
+                      style={{ margin: '0 5px' }}
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                    >
                       SAVE
                     </Button>
                   </Grid>
                 </Grid>
-              </Grid>
-            </form>
-          </CardContent>
-        </Card>
-      </Grid>
+                </Grid>
+            </Form>
+          )}
+        </Formik>
+      </Paper>
+    </Stack>
+    </Container>
+    </Grid>
+    </Box>
     </div>
+    </Grid>
+    </Grid>
   );
 }

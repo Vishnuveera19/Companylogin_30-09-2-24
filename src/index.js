@@ -257,6 +257,7 @@ import JobStatusFormMaster from "./components/Masters/Jobstatus";
 import { LightThemeConfig } from "./components/Home Page/Theme";
 import { CssBaseline } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
+import DesignationMasterForm from "./components/Masters/DesignationMasters";
 
 const store = createStore(entityReducer);
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -326,7 +327,7 @@ root.render(
    <Route path="/CategoryFormMaster" element={<CategoryFormMaster/>}></Route>
    <Route path="/CompanyMasterss" element={<CompanyMasterss/>}></Route>
    <Route path="/DepartmentFormMaster" element={<DepartmentFormMaster/>}></Route>
-   <Route path="/DesignationMasters" element={<DesignationMasters/>}/>
+   <Route path="/DesignationMasters" element={<DesignationMasterForm/>}/>
    <Route path="/DivisionMaster" element={<DivisionMaster/>}/>
    <Route path="/EarnDeductMasters" element={<EarnDeductMasters/>}/>
    <Route path="/EmployeeHome220" element={<EmployeeHome220/>}/>
