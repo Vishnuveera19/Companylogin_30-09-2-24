@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Container, Typography, Tabs, Tab, Grid, Card, Popover } from '@mui/material';
+import { TextField, Button, Box, Container, Typography, Tabs, Tab, Grid, Card, Popover, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import Navbar from "../Home Page/Navbar";
 import Sidenav from "../Home Page/Sidenav";
 import { postRequest } from '../../serverconfiguration/requestcomp';
@@ -16,6 +16,8 @@ const CompanyMasterss = () => {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverAnchorEl, setPopoverAnchorEl] = useState(null);
   const [popoverMessage, setPopoverMessage] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const navigate = useNavigate();
   const validationSchema = yup.object({
     companyName: yup
@@ -229,8 +231,7 @@ const CompanyMasterss = () => {
       const response = await postRequest(ServerConfig.url, REPORTS, { query });
 
       if (response.status === 200) {
-        alert('Data saved successfully!');
-        navigate("/PayBranchForm01");
+        setDialogOpen(true);
       } else {
         alert`(Unexpected response status: ${response.status})`;
       }
@@ -244,6 +245,19 @@ const CompanyMasterss = () => {
         alert`(Request error: ${error.message})`;
       }
     }
+  };
+
+  
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+  };
+
+  const handleDialogYes = () => {
+    navigate("/PayBranchForm01");
+  };
+
+  const handleDialogNo = () => {
+    navigate("/DivisionForm");
   };
 
   return (
@@ -645,6 +659,27 @@ const CompanyMasterss = () => {
           >
             <Typography sx={{ p: 2 }}>{popoverMessage}</Typography>
           </Popover>
+          <Dialog
+                    open={dialogOpen}
+                    onClose={handleDialogClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                  >
+                    <DialogTitle id="alert-dialog-title">{"Do you want to add branch?"}</DialogTitle>
+                    <DialogContent>
+                      <DialogContentText id="alert-dialog-description">
+                        Please confirm whether you want to add branch or not.
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button onClick={handleDialogYes} color="primary">
+                        Yes
+                      </Button>
+                      <Button onClick={handleDialogNo} color="primary" autoFocus>
+                        No
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
       </Card>
       </Container>
       </Grid>
