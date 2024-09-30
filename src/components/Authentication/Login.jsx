@@ -193,6 +193,7 @@ function LoginOthers(props) {
                 value={username}
                 onChange={handleUsernameChange}
                 sx={{ backgroundColor: "#f9f9f9" }}
+                InputLabelProps={{shrink : true}}
               />
             </Grid>
             <Grid item xs={12}>
@@ -204,6 +205,7 @@ function LoginOthers(props) {
                 value={password}
                 onChange={handlePasswordChange}
                 sx={{ backgroundColor: "#f9f9f9" }}
+                InputLabelProps={{shrink : true}}
               />
             </Grid>
             <Grid item xs={12}>
@@ -217,6 +219,7 @@ function LoginOthers(props) {
                 sx={{ backgroundColor: "#f9f9f9" }}
               /> */}
               <select
+              
                 style={{ height: "50px", width: "333px" }}
                 onChange={(e) => setLoginType(e.target.value)}>
                 <option>Select Login Type</option>
